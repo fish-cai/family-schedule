@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
+    # CORS
+    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+
     # WeChat
     WECHAT_APP_ID: str = ""
     WECHAT_APP_SECRET: str = ""
