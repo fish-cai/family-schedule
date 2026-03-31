@@ -15,8 +15,9 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 async def wechat_login(
     request: WechatLoginRequest, db: AsyncSession = Depends(get_db)
 ):
-    if settings.DEBUG and not settings.WECHAT_APP_ID:
-        openid = f"dev_{request.code}"
+    if settings.DEBUG:
+        # Dev mode: always mock. Real WeChat login only in production.
+        openid = f"dev_{request.code}" if not request.code.startswith("dev_") else request.code
     else:
         from app.services.wechat_service import code2session
         wx_data = await code2session(request.code)
