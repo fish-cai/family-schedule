@@ -1,0 +1,20 @@
+.group-create-page { min-height: 100vh; background: #f8f9fa; }
+.form-section { background: #fff; padding: 24px 32px; margin-bottom: 16px; }
+.name-input { font-size: 34px; font-weight: 500; width: 100%; padding: 16px 0; }
+.form-row-label { padding: 16px 32px 8px; }
+.section-label { font-size: 24px; color: #999; }
+.icon-picker { display: flex; flex-wrap: wrap; gap: 12px; padding: 8px 32px 24px; background: #fff; }
+.icon-item {
+  padding: 12px 24px; border-radius: 8px; background: #f0f0f0;
+  &.active { background: #4A90D9; .icon-text { color: #fff; } }
+}
+.icon-text { font-size: 24px; color: #666; }
+.color-row { display: flex; gap: 20px; padding: 8px 32px 24px; background: #fff; margin-bottom: 16px; }
+.color-dot {
+  width: 56px; height: 56px; border-radius: 50%; border: 4px solid transparent;
+  &.active { border-color: #333; }
+}
+.desc-input { font-size: 28px; width: 100%; min-height: 120px; }
+.save-section { padding: 48px 32px; }
+.save-btn { background: #4A90D9; border-radius: 16px; padding: 24px 0; text-align: center; &.disabled { opacity: 0.5; } }
+.save-text { font-size: 32px; color: #fff; font-weight: 600; }
