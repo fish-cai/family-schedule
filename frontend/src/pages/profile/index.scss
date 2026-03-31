@@ -1,0 +1,28 @@
+.profile-page { min-height: 100vh; background: #f8f9fa; }
+
+.user-section {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 64px 32px 48px; background: #fff; margin-bottom: 16px;
+}
+
+.avatar-placeholder {
+  width: 120px; height: 120px; border-radius: 50%; background: #4A90D9;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; overflow: hidden;
+}
+
+.avatar-img { width: 120px; height: 120px; }
+.avatar-text { font-size: 48px; color: #fff; font-weight: 600; }
+.nickname { font-size: 34px; font-weight: 600; color: #1a1a1a; }
+
+.menu-section { background: #fff; margin-bottom: 16px; }
+
+.menu-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 28px 32px; border-bottom: 1px solid #f0f0f0;
+}
+
+.menu-label { font-size: 28px; color: #333; }
+.menu-arrow { font-size: 32px; color: #ccc; }
+.logout-section { padding: 64px 32px; text-align: center; }
+.logout-btn { font-size: 28px; color: #FF4D4F; }
