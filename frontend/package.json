@@ -53,6 +53,7 @@
     "@tarojs/runtime": "4.1.11",
     "@tarojs/shared": "4.1.11",
     "@tarojs/taro": "4.1.11",
+    "lunar-javascript": "^1.7.7",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "zustand": "^5.0.12"

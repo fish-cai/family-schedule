@@ -66,6 +66,22 @@
   }
 }
 
+.lunar-text {
+  font-size: 18px;
+  color: #bbb;
+  line-height: 1;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 80px;
+  text-align: center;
+
+  &.lunar-highlight {
+    color: #e74c3c;
+  }
+}
+
 .dot-row {
   display: flex;
   gap: 4px;

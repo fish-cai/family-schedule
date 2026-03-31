@@ -1,4 +1,5 @@
 import { View, Text } from "@tarojs/components";
+import { Solar } from "lunar-javascript";
 import { useCalendarStore } from "../../stores/calendar";
 import type { EventResponse } from "../../types";
 import "./index.scss";
@@ -65,6 +66,31 @@ function getEventDotsForDate(
   return colors;
 }
 
+function getLunarText(date: Date): { text: string; highlight: boolean } {
+  const solar = Solar.fromDate(date);
+  const lunar = solar.getLunar();
+
+  // Check for jieqi (solar term)
+  const jieQi = lunar.getCurrentJieQi();
+  if (jieQi) {
+    return { text: jieQi.getName(), highlight: true };
+  }
+
+  // Check for traditional festivals
+  const festivals = lunar.getFestivals();
+  if (festivals.length > 0) {
+    return { text: festivals[0], highlight: true };
+  }
+
+  // First day of lunar month: show month name
+  if (lunar.getDay() === 1) {
+    return { text: lunar.getMonthInChinese() + "月", highlight: false };
+  }
+
+  // Regular day
+  return { text: lunar.getDayInChinese(), highlight: false };
+}
+
 export default function CalendarGrid({ events, getGroupColor }: CalendarGridProps) {
   const { currentMonth, selectedDate, isExpanded, selectDate, toggleExpand } =
     useCalendarStore();
@@ -100,6 +126,7 @@ export default function CalendarGrid({ events, getGroupColor }: CalendarGridProp
           const isToday = isSameDay(date, today);
           const isSelected = isSameDay(date, selectedDate);
           const dots = getEventDotsForDate(date, events, getGroupColor);
+          const lunar = getLunarText(date);
 
           return (
             <View
@@ -110,6 +137,9 @@ export default function CalendarGrid({ events, getGroupColor }: CalendarGridProp
               <View className={`day-number ${isToday ? "today" : ""}`}>
                 <Text>{date.getDate()}</Text>
               </View>
+              <Text className={`lunar-text ${lunar.highlight ? "lunar-highlight" : ""}`}>
+                {lunar.text}
+              </Text>
               {dots.length > 0 && (
                 <View className="dot-row">
                   {dots.map((color, di) => (
