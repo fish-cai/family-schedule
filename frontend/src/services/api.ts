@@ -1,4 +1,12 @@
 import Taro from "@tarojs/taro";
+import type {
+  TokenResponse,
+  User,
+  GroupResponse,
+  EventResponse,
+  EventCreate,
+  EventUpdate,
+} from "../types";
 
 const BASE_URL =
   process.env.NODE_ENV === "development"
@@ -13,7 +21,7 @@ interface RequestOptions {
 }
 
 export async function request<T>(options: RequestOptions): Promise<T> {
-  const { url, method = "GET", data, needAuth = false } = options;
+  const { url, method = "GET", data, needAuth = true } = options;
 
   const header: Record<string, string> = {
     "Content-Type": "application/json",
@@ -33,9 +41,83 @@ export async function request<T>(options: RequestOptions): Promise<T> {
     header,
   });
 
+  if (response.statusCode === 401) {
+    Taro.removeStorageSync("access_token");
+    Taro.redirectTo({ url: "/pages/index/index" });
+    throw new Error("登录已过期");
+  }
+
+  if (response.statusCode >= 400) {
+    const detail = response.data?.detail || "请求失败";
+    throw new Error(detail);
+  }
+
   return response.data as T;
 }
 
-export async function healthCheck(): Promise<{ status: string; service: string }> {
-  return request({ url: "/health" });
+// Health
+export async function healthCheck() {
+  return request<{ status: string; service: string }>({
+    url: "/health",
+    needAuth: false,
+  });
+}
+
+// Auth
+export async function login(code: string): Promise<TokenResponse> {
+  return request<TokenResponse>({
+    url: "/api/users/login",
+    method: "POST",
+    data: { code },
+    needAuth: false,
+  });
+}
+
+export async function getMe(): Promise<User> {
+  return request<User>({ url: "/api/users/me" });
+}
+
+// Groups
+export async function getMyGroups(): Promise<GroupResponse[]> {
+  return request<GroupResponse[]>({ url: "/api/groups" });
+}
+
+// Events
+export async function createEvent(data: EventCreate): Promise<EventResponse> {
+  return request<EventResponse>({
+    url: "/api/events",
+    method: "POST",
+    data: data as unknown as Record<string, unknown>,
+  });
+}
+
+export async function getEvents(
+  start: string,
+  end: string,
+  groupId?: string
+): Promise<EventResponse[]> {
+  let url = `/api/events?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
+  if (groupId) {
+    url += `&group_id=${groupId}`;
+  }
+  return request<EventResponse[]>({ url });
+}
+
+export async function getEventDetail(id: string): Promise<EventResponse> {
+  return request<EventResponse>({ url: `/api/events/${id}` });
+}
+
+export async function updateEvent(
+  id: string,
+  data: EventUpdate
+): Promise<EventResponse> {
+  return request<EventResponse>({
+    url: `/api/events/${id}`,
+    method: "PUT",
+    data: data as unknown as Record<string, unknown>,
+  });
+}
+
+export async function deleteEvent(id: string): Promise<void> {
+  await request<void>({ url: `/api/events/${id}`, method: "DELETE" });
 }
