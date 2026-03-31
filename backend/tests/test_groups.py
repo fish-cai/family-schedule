@@ -308,3 +308,29 @@ async def test_remove_creator(client, user_a, user_b):
         headers=headers_b,
     )
     assert resp.status_code == 403
+
+
+async def test_join_group_by_code(client, user_a, user_b):
+    _, headers_a = user_a
+    _, headers_b = user_b
+    create_resp = await client.post(
+        "/api/groups", json={"name": "邀请码组"}, headers=headers_a
+    )
+    invite_code = create_resp.json()["invite_code"]
+    resp = await client.post(
+        "/api/groups/join",
+        json={"invite_code": invite_code},
+        headers=headers_b,
+    )
+    assert resp.status_code == 200
+    assert "group_id" in resp.json()
+
+
+async def test_join_group_by_code_invalid(client, user_a):
+    _, headers = user_a
+    resp = await client.post(
+        "/api/groups/join",
+        json={"invite_code": "INVALID"},
+        headers=headers,
+    )
+    assert resp.status_code == 400

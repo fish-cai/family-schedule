@@ -313,3 +313,19 @@ async def remove_member(
 
     await db.delete(target_member)
     await db.commit()
+
+
+async def join_group_by_code(
+    db: AsyncSession, user_id: uuid.UUID, invite_code: str
+) -> CalendarGroup:
+    result = await db.execute(
+        select(CalendarGroup).where(CalendarGroup.invite_code == invite_code)
+    )
+    group = result.scalar_one_or_none()
+    if group is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="邀请码无效",
+        )
+    await join_group(db, group.id, user_id, invite_code)
+    return group

@@ -97,6 +97,16 @@ async def delete_group(
     await group_service.delete_group(db, group_id, current_user.id)
 
 
+@router.post("/join", status_code=status.HTTP_200_OK)
+async def join_group_by_code(
+    body: JoinGroupRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    group = await group_service.join_group_by_code(db, current_user.id, body.invite_code)
+    return {"detail": "加入成功", "group_id": str(group.id)}
+
+
 @router.post("/{group_id}/join", status_code=status.HTTP_200_OK)
 async def join_group(
     group_id: uuid.UUID,
