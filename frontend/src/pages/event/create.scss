@@ -1,0 +1,88 @@
+.create-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.form-section {
+  background: #fff;
+  padding: 24px 32px;
+  margin-bottom: 16px;
+}
+
+.title-input {
+  font-size: 34px;
+  font-weight: 500;
+  width: 100%;
+  padding: 16px 0;
+}
+
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.form-label {
+  font-size: 28px;
+  color: #333;
+  flex-shrink: 0;
+  width: 120px;
+}
+
+.form-input {
+  font-size: 28px;
+  color: #333;
+  text-align: right;
+  flex: 1;
+}
+
+.picker-group {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.picker-value {
+  font-size: 28px;
+  color: #4A90D9;
+}
+
+.color-picker {
+  display: flex;
+  gap: 16px;
+}
+
+.color-dot {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid transparent;
+
+  &.active {
+    border-color: #333;
+  }
+}
+
+.save-section {
+  padding: 48px 32px;
+}
+
+.save-btn {
+  background: #4A90D9;
+  border-radius: 16px;
+  padding: 24px 0;
+  text-align: center;
+
+  &.disabled {
+    opacity: 0.5;
+  }
+}
+
+.save-text {
+  font-size: 32px;
+  color: #fff;
+  font-weight: 600;
+}
