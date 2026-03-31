@@ -1,0 +1,130 @@
+.calendar-page {
+  min-height: 100vh;
+  background: #fff;
+  padding-bottom: 120px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px 16px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.month-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.month-label {
+  font-size: 24px;
+  color: #999;
+  padding: 8px;
+}
+
+.today-btn {
+  font-size: 28px;
+  color: #4A90D9;
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+.divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 8px 32px;
+}
+
+.events-section {
+  padding: 16px 32px;
+}
+
+.date-label {
+  font-size: 26px;
+  color: #666;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.hint {
+  font-size: 26px;
+  color: #ccc;
+  text-align: center;
+  padding: 48px 0;
+  display: block;
+}
+
+.event-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: #f8f9fa;
+  border-radius: 16px;
+  border-left: 6px solid #4A90D9;
+  margin-bottom: 16px;
+
+  &.busy {
+    border-left-color: #999;
+  }
+}
+
+.event-main {
+  flex: 1;
+}
+
+.event-title {
+  font-size: 28px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.event-meta {
+  display: flex;
+  margin-top: 6px;
+}
+
+.event-time {
+  font-size: 24px;
+  color: #999;
+}
+
+.event-location {
+  font-size: 24px;
+  color: #999;
+}
+
+.group-tag {
+  font-size: 20px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.fab {
+  position: fixed;
+  right: 40px;
+  bottom: 60px;
+  width: 96px;
+  height: 96px;
+  background: #4A90D9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(74, 144, 217, 0.3);
+}
+
+.fab-icon {
+  font-size: 48px;
+  color: #fff;
+  line-height: 1;
+}
