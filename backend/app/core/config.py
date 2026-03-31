@@ -31,3 +31,10 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Validate SECRET_KEY in production
+if not settings.DEBUG and settings.SECRET_KEY == "dev-secret-key-change-in-production":
+    raise RuntimeError(
+        "FATAL: SECRET_KEY must be changed in production. "
+        "Set a random string of at least 32 characters."
+    )

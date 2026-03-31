@@ -18,7 +18,9 @@ async def wechat_login(
     if settings.DEBUG and not settings.WECHAT_APP_ID:
         openid = f"dev_{request.code}"
     else:
-        openid = f"dev_{request.code}"
+        from app.services.wechat_service import code2session
+        wx_data = await code2session(request.code)
+        openid = wx_data["openid"]
 
     user = await get_or_create_user(db, openid)
     access_token = create_access_token(data={"sub": user.openid})
