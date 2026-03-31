@@ -1,1 +1,3 @@
-export default definePageConfig({ navigationBarTitleText: "日程详情" });
+export default definePageConfig({
+  navigationBarTitleText: "日程详情",
+});
