@@ -16,6 +16,7 @@ class EventCreate(BaseModel):
     visibility: EventVisibility = EventVisibility.PUBLIC
     repeat_rule: dict | None = None
     group_id: str | None = None
+    remind_minutes: list[int] | None = None
 
 
 class EventUpdate(BaseModel):
@@ -28,6 +29,7 @@ class EventUpdate(BaseModel):
     color: str | None = Field(default=None, max_length=7)
     visibility: EventVisibility | None = None
     repeat_rule: dict | None = None
+    remind_minutes: list[int] | None = None
 
 
 class EventResponse(BaseModel):
@@ -45,5 +47,6 @@ class EventResponse(BaseModel):
     creator_id: str
     creator_nickname: str
     created_at: datetime
+    remind_minutes: list[int] = []
 
     model_config = {"from_attributes": True}

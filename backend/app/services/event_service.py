@@ -11,9 +11,17 @@ from app.models.group_member import GroupMember, MemberRole
 from app.models.user import User
 from app.schemas.event import EventCreate, EventUpdate
 from app.services.group_service import get_member_role
+from app.services.reminder_service import (
+    create_reminders,
+    delete_reminders_for_event,
+    get_remind_minutes,
+    update_reminders,
+)
 
 
-def _event_to_dict(event: Event, creator_nickname: str) -> dict:
+def _event_to_dict(
+    event: Event, creator_nickname: str, remind_minutes: list[int] | None = None
+) -> dict:
     return {
         "id": str(event.id),
         "title": event.title,
@@ -29,6 +37,7 @@ def _event_to_dict(event: Event, creator_nickname: str) -> dict:
         "creator_id": str(event.creator_id),
         "creator_nickname": creator_nickname,
         "created_at": event.created_at,
+        "remind_minutes": remind_minutes or [],
     }
 
 
@@ -48,6 +57,7 @@ def _event_to_busy_dict(event: Event) -> dict:
         "creator_id": str(event.creator_id),
         "creator_nickname": "",
         "created_at": event.created_at,
+        "remind_minutes": [],
     }
 
 
@@ -78,6 +88,11 @@ async def create_event(db: AsyncSession, user: User, data: EventCreate) -> Event
     db.add(event)
     await db.commit()
     await db.refresh(event)
+
+    if data.remind_minutes:
+        await create_reminders(db, event, user.id, data.remind_minutes)
+        await db.commit()
+
     return event
 
 
@@ -142,7 +157,11 @@ async def query_events(
 
         if is_own or vis == EventVisibility.PUBLIC:
             nickname = event.creator.nickname if event.creator else ""
-            result_list.append(_event_to_dict(event, nickname))
+            if is_own:
+                rm = await get_remind_minutes(db, event.id, user_id)
+            else:
+                rm = []
+            result_list.append(_event_to_dict(event, nickname, rm))
         elif vis == EventVisibility.BUSY:
             result_list.append(_event_to_busy_dict(event))
         # PRIVATE from others: skip entirely
@@ -176,7 +195,8 @@ async def get_event_detail(
                 detail="无权查看",
             )
         nickname = event.creator.nickname if event.creator else ""
-        return _event_to_dict(event, nickname)
+        rm = await get_remind_minutes(db, event.id, user_id)
+        return _event_to_dict(event, nickname, rm)
     else:
         # Group event: check membership
         role = await get_member_role(db, event.group_id, user_id)
@@ -196,7 +216,8 @@ async def get_event_detail(
                 return _event_to_busy_dict(event)
 
         nickname = event.creator.nickname if event.creator else ""
-        return _event_to_dict(event, nickname)
+        rm = await get_remind_minutes(db, event.id, user_id)
+        return _event_to_dict(event, nickname, rm)
 
 
 async def can_edit_event(
@@ -235,11 +256,17 @@ async def update_event(
             detail="无权修改该日程",
         )
 
-    for field, value in data.model_dump(exclude_unset=True).items():
+    update_data = data.model_dump(exclude_unset=True)
+    remind_minutes = update_data.pop("remind_minutes", None)
+    for field, value in update_data.items():
         setattr(event, field, value)
 
     await db.commit()
     await db.refresh(event)
+
+    if remind_minutes is not None:
+        await update_reminders(db, event, user_id, remind_minutes)
+        await db.commit()
 
     # Re-load creator after refresh
     result = await db.execute(
@@ -249,7 +276,8 @@ async def update_event(
     )
     event = result.scalar_one()
     nickname = event.creator.nickname if event.creator else ""
-    return _event_to_dict(event, nickname)
+    rm = await get_remind_minutes(db, event.id, user_id)
+    return _event_to_dict(event, nickname, rm)
 
 
 async def delete_event(
@@ -272,5 +300,6 @@ async def delete_event(
             detail="无权删除该日程",
         )
 
+    await delete_reminders_for_event(db, event.id)
     await db.delete(event)
     await db.commit()
