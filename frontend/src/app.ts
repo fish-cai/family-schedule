@@ -1,17 +1,21 @@
-import { PropsWithChildren } from 'react'
-import { useLaunch } from '@tarojs/taro'
+import { PropsWithChildren } from "react";
+import { useLaunch } from "@tarojs/taro";
+import { useAuthStore } from "./stores/auth";
 
-import './app.scss'
+import "./app.scss";
 
-function App({ children }: PropsWithChildren<any>) {
+function App({ children }: PropsWithChildren) {
   useLaunch(() => {
-    console.log('App launched.')
-  })
+    const { loadFromStorage, login } = useAuthStore.getState();
+    loadFromStorage().then(() => {
+      const { token } = useAuthStore.getState();
+      if (!token) {
+        login();
+      }
+    });
+  });
 
-  // children 是将要会渲染的页面
-  return children
+  return children;
 }
-  
 
-
-export default App
+export default App;
