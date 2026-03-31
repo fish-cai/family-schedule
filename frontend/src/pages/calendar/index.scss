@@ -121,10 +121,51 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(74, 144, 217, 0.3);
+  z-index: 100;
 }
 
 .fab-icon {
   font-size: 48px;
   color: #fff;
   line-height: 1;
+}
+
+.fab-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 99;
+}
+
+.fab-menu {
+  position: fixed;
+  right: 40px;
+  bottom: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 100;
+}
+
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.fab-menu-icon {
+  font-size: 32px;
+}
+
+.fab-menu-label {
+  font-size: 28px;
+  color: #333;
+  font-weight: 500;
 }

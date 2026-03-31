@@ -37,11 +37,26 @@ function toISOWithTZ(dateStr: string, timeStr: string): string {
   return `${dateStr}T${timeStr}:00+08:00`;
 }
 
+function formatRepeatRule(rule: Record<string, any>): string {
+  if (!rule || !rule.freq) return "";
+  const dayMap: Record<string, string> = {
+    MO: "一", TU: "二", WE: "三", TH: "四", FR: "五", SA: "六", SU: "日",
+  };
+  if (rule.freq === "daily") return "每天重复";
+  if (rule.freq === "weekly" && rule.byday) {
+    const days = rule.byday.map((d: string) => "周" + (dayMap[d] || d)).join("、");
+    return `每周${days}重复`;
+  }
+  if (rule.freq === "monthly") return "每月重复";
+  return "重复";
+}
+
 export default function EventCreatePage() {
   const router = useRouter();
   const eventId = router.params.id || null;
   const initialDate = router.params.date || toDateStr(new Date());
   const isEdit = !!eventId;
+  const aiResultParam = router.params.ai_result || null;
 
   const { createEvent, updateEvent } = useEventStore();
   const { groups, fetchGroups } = useGroupStore();
@@ -62,6 +77,7 @@ export default function EventCreatePage() {
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [reminderMinutes, setReminderMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [repeatRule, setRepeatRule] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     fetchGroups();
@@ -91,6 +107,30 @@ export default function EventCreatePage() {
       });
     }
   }, [isEdit, eventId]);
+
+  useEffect(() => {
+    if (aiResultParam && !isEdit) {
+      try {
+        const result = JSON.parse(decodeURIComponent(aiResultParam));
+        if (result.title) setTitle(result.title);
+        if (result.is_all_day !== undefined) setIsAllDay(result.is_all_day);
+        if (result.start_time) {
+          const start = new Date(result.start_time);
+          setStartDate(toDateStr(start));
+          setStartTime(toTimeStr(start));
+        }
+        if (result.end_time) {
+          const end = new Date(result.end_time);
+          setEndDate(toDateStr(end));
+          setEndTime(toTimeStr(end));
+        }
+        if (result.location) setLocation(result.location);
+        if (result.repeat_rule) setRepeatRule(result.repeat_rule);
+      } catch (e) {
+        console.error("Failed to parse ai_result:", e);
+      }
+    }
+  }, [aiResultParam, isEdit]);
 
   const groupPickerRange = ["个人", ...groups.map((g) => g.name)];
   const groupPickerValue = groupId
@@ -145,6 +185,7 @@ export default function EventCreatePage() {
           group_id: groupId,
           visibility: groupId ? (visibility as "public" | "busy" | "private") : "public",
           remind_minutes: reminderMinutes > 0 ? [reminderMinutes] : undefined,
+          repeat_rule: repeatRule || undefined,
         };
         await createEvent(data);
         Taro.showToast({ title: "已创建", icon: "success" });
@@ -269,6 +310,14 @@ export default function EventCreatePage() {
           ))}
         </View>
       </View>
+
+      {/* Repeat rule (from AI, read-only) */}
+      {repeatRule && (
+        <View className="form-row">
+          <Text className="form-label">重复</Text>
+          <Text className="repeat-text">{formatRepeatRule(repeatRule)}</Text>
+        </View>
+      )}
 
       {/* Reminder */}
       <View className="form-row">

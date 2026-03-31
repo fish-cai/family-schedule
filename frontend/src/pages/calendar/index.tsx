@@ -1,10 +1,11 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { View, Text } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
 import CalendarGrid from "../../components/calendar-grid";
 import { useCalendarStore } from "../../stores/calendar";
 import { useEventStore } from "../../stores/event";
 import { useGroupStore } from "../../stores/group";
+import AiInput from "../../components/ai-input";
 import "./index.scss";
 
 const MONTH_NAMES = [
@@ -28,6 +29,9 @@ export default function CalendarPage() {
   const { currentMonth, selectedDate, setMonth, goToToday } = useCalendarStore();
   const { events, loading, fetchEvents } = useEventStore();
   const { groups, fetchGroups, getGroupColor } = useGroupStore();
+
+  const [showFabMenu, setShowFabMenu] = useState(false);
+  const [showAiInput, setShowAiInput] = useState(false);
 
   const loadMonthEvents = useCallback(() => {
     const year = currentMonth.getFullYear();
@@ -154,10 +158,33 @@ export default function CalendarPage() {
         })}
       </View>
 
-      {/* FAB */}
-      <View className="fab" onClick={handleCreate}>
-        <Text className="fab-icon">+</Text>
+      {/* FAB Menu */}
+      {showFabMenu && (
+        <View className="fab-overlay" onClick={() => setShowFabMenu(false)}>
+          <View className="fab-menu">
+            <View className="fab-menu-item" onClick={(e) => { e.stopPropagation(); setShowFabMenu(false); handleCreate(); }}>
+              <Text className="fab-menu-icon">✏️</Text>
+              <Text className="fab-menu-label">手动创建</Text>
+            </View>
+            <View className="fab-menu-item" onClick={(e) => { e.stopPropagation(); setShowFabMenu(false); setShowAiInput(true); }}>
+              <Text className="fab-menu-icon">🤖</Text>
+              <Text className="fab-menu-label">AI 创建</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* FAB Button */}
+      <View className="fab" onClick={() => setShowFabMenu(!showFabMenu)}>
+        <Text className="fab-icon">{showFabMenu ? "×" : "+"}</Text>
       </View>
+
+      {/* AI Input */}
+      <AiInput
+        visible={showAiInput}
+        selectedDate={selectedDate.toISOString().slice(0, 10)}
+        onClose={() => setShowAiInput(false)}
+      />
     </View>
   );
 }
