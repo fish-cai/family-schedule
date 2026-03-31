@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     WECHAT_APP_ID: str = ""
     WECHAT_APP_SECRET: str = ""
 
+    # LLM
+    LLM_PROVIDER: str = "deepseek"
+    DEEPSEEK_API_KEY: str = ""
+    DEEPSEEK_MODEL: str = "deepseek-chat"
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 
