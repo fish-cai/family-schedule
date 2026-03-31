@@ -8,6 +8,13 @@ import type { EventCreate, EventUpdate } from "../../types";
 import "./create.scss";
 
 const PRESET_COLORS = ["#4A90D9", "#FF6B6B", "#52C41A", "#FAAD14", "#722ED1", "#EB2F96"];
+const REMINDER_OPTIONS = [
+  { value: 0, label: "不提醒" },
+  { value: 5, label: "5 分钟前" },
+  { value: 15, label: "15 分钟前" },
+  { value: 30, label: "30 分钟前" },
+  { value: 60, label: "1 小时前" },
+];
 const VISIBILITY_OPTIONS = [
   { value: "public", label: "公开" },
   { value: "busy", label: "仅显示忙碌" },
@@ -53,6 +60,7 @@ export default function EventCreatePage() {
   const [groupId, setGroupId] = useState<string | null>(null);
   const [visibility, setVisibility] = useState("public");
   const [color, setColor] = useState(PRESET_COLORS[0]);
+  const [reminderMinutes, setReminderMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -77,6 +85,9 @@ export default function EventCreatePage() {
         setGroupId(e.group_id);
         setVisibility(e.visibility);
         if (e.color) setColor(e.color);
+        if (e.remind_minutes && e.remind_minutes.length > 0) {
+          setReminderMinutes(e.remind_minutes[0]);
+        }
       });
     }
   }, [isEdit, eventId]);
@@ -119,6 +130,7 @@ export default function EventCreatePage() {
           location,
           color,
           visibility: groupId ? (visibility as "public" | "busy" | "private") : undefined,
+          remind_minutes: reminderMinutes > 0 ? [reminderMinutes] : undefined,
         };
         await updateEvent(eventId, data);
         Taro.showToast({ title: "已更新", icon: "success" });
@@ -132,6 +144,7 @@ export default function EventCreatePage() {
           color,
           group_id: groupId,
           visibility: groupId ? (visibility as "public" | "busy" | "private") : "public",
+          remind_minutes: reminderMinutes > 0 ? [reminderMinutes] : undefined,
         };
         await createEvent(data);
         Taro.showToast({ title: "已创建", icon: "success" });
@@ -255,6 +268,23 @@ export default function EventCreatePage() {
             />
           ))}
         </View>
+      </View>
+
+      {/* Reminder */}
+      <View className="form-row">
+        <Text className="form-label">提醒</Text>
+        <Picker
+          mode="selector"
+          range={REMINDER_OPTIONS.map((r) => r.label)}
+          value={REMINDER_OPTIONS.findIndex((r) => r.value === reminderMinutes)}
+          onChange={(e) => {
+            setReminderMinutes(REMINDER_OPTIONS[Number(e.detail.value)].value);
+          }}
+        >
+          <Text className="picker-value">
+            {REMINDER_OPTIONS.find((r) => r.value === reminderMinutes)?.label || "不提醒"}
+          </Text>
+        </Picker>
       </View>
 
       {/* Save button */}

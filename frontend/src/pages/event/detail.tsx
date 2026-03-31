@@ -128,6 +128,15 @@ export default function EventDetailPage() {
           </View>
         )}
 
+        {event.remind_minutes && event.remind_minutes.length > 0 && (
+          <View className="info-row">
+            <Text className="info-icon">🔔</Text>
+            <Text className="info-text">
+              提前 {event.remind_minutes[0]} 分钟提醒
+            </Text>
+          </View>
+        )}
+
         {event.description ? (
           <View className="info-row">
             <Text className="info-icon">📝</Text>

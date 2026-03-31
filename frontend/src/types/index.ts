@@ -42,6 +42,7 @@ export interface EventResponse {
   creator_id: string;
   creator_nickname: string;
   created_at: string;
+  remind_minutes: number[];
 }
 
 export interface EventCreate {
@@ -55,6 +56,7 @@ export interface EventCreate {
   visibility?: "public" | "busy" | "private";
   repeat_rule?: Record<string, unknown> | null;
   group_id?: string | null;
+  remind_minutes?: number[];
 }
 
 export interface EventUpdate {
@@ -67,6 +69,7 @@ export interface EventUpdate {
   color?: string;
   visibility?: "public" | "busy" | "private";
   repeat_rule?: Record<string, unknown> | null;
+  remind_minutes?: number[];
 }
 
 export interface GroupCreate {
