@@ -3,6 +3,9 @@ import type {
   TokenResponse,
   User,
   GroupResponse,
+  GroupDetailResponse,
+  GroupCreate,
+  GroupUpdate,
   EventResponse,
   EventCreate,
   EventUpdate,
@@ -80,6 +83,42 @@ export async function getMe(): Promise<User> {
 // Groups
 export async function getMyGroups(): Promise<GroupResponse[]> {
   return request<GroupResponse[]>({ url: "/api/groups" });
+}
+
+export async function createGroup(data: GroupCreate): Promise<GroupResponse> {
+  return request<GroupResponse>({
+    url: "/api/groups",
+    method: "POST",
+    data: data as unknown as Record<string, unknown>,
+  });
+}
+
+export async function getGroupDetail(id: string): Promise<GroupDetailResponse> {
+  return request<GroupDetailResponse>({ url: `/api/groups/${id}` });
+}
+
+export async function updateGroup(id: string, data: GroupUpdate): Promise<GroupResponse> {
+  return request<GroupResponse>({
+    url: `/api/groups/${id}`,
+    method: "PUT",
+    data: data as unknown as Record<string, unknown>,
+  });
+}
+
+export async function deleteGroup(id: string): Promise<void> {
+  await request<void>({ url: `/api/groups/${id}`, method: "DELETE" });
+}
+
+export async function joinGroupByCode(inviteCode: string): Promise<{ detail: string; group_id: string }> {
+  return request<{ detail: string; group_id: string }>({
+    url: "/api/groups/join",
+    method: "POST",
+    data: { invite_code: inviteCode },
+  });
+}
+
+export async function removeMember(groupId: string, userId: string): Promise<void> {
+  await request<void>({ url: `/api/groups/${groupId}/members/${userId}`, method: "DELETE" });
 }
 
 // Events

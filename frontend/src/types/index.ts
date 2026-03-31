@@ -68,3 +68,28 @@ export interface EventUpdate {
   visibility?: "public" | "busy" | "private";
   repeat_rule?: Record<string, unknown> | null;
 }
+
+export interface GroupCreate {
+  name: string;
+  icon?: string;
+  color?: string;
+  description?: string;
+}
+
+export interface GroupUpdate {
+  name?: string;
+  icon?: string;
+  color?: string;
+  description?: string;
+}
+
+export interface GroupMemberResponse {
+  user_id: string;
+  nickname: string;
+  avatar: string;
+  role: string;
+}
+
+export interface GroupDetailResponse extends GroupResponse {
+  members: GroupMemberResponse[];
+}
