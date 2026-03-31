@@ -96,3 +96,17 @@ export interface GroupMemberResponse {
 export interface GroupDetailResponse extends GroupResponse {
   members: GroupMemberResponse[];
 }
+
+export interface ParseEventResponse {
+  title: string;
+  start_time: string;
+  end_time: string | null;
+  is_all_day: boolean;
+  location: string;
+  description: string;
+  repeat_rule: {
+    freq: "daily" | "weekly" | "monthly";
+    interval: number;
+    byday?: string[];
+  } | null;
+}

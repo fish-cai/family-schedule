@@ -9,6 +9,7 @@ import type {
   EventResponse,
   EventCreate,
   EventUpdate,
+  ParseEventResponse,
 } from "../types";
 
 const BASE_URL =
@@ -159,4 +160,13 @@ export async function updateEvent(
 
 export async function deleteEvent(id: string): Promise<void> {
   await request<void>({ url: `/api/events/${id}`, method: "DELETE" });
+}
+
+// AI
+export async function parseEvent(text: string): Promise<ParseEventResponse> {
+  return request<ParseEventResponse>({
+    url: "/api/ai/parse-event",
+    method: "POST",
+    data: { text },
+  });
 }

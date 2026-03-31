@@ -1,0 +1,77 @@
+.ai-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 1000;
+}
+
+.ai-panel {
+  width: 100%;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 32px;
+  padding-bottom: 64px;
+}
+
+.ai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.ai-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.ai-close {
+  font-size: 40px;
+  color: #999;
+  padding: 8px;
+  line-height: 1;
+}
+
+.ai-body {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.ai-input {
+  flex: 1;
+  font-size: 28px;
+  padding: 20px 24px;
+  background: #f5f5f5;
+  border-radius: 12px;
+}
+
+.ai-send {
+  background: #4A90D9;
+  border-radius: 12px;
+  padding: 20px 24px;
+  flex-shrink: 0;
+
+  &.disabled {
+    opacity: 0.5;
+  }
+}
+
+.ai-send-text {
+  font-size: 28px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.ai-hint {
+  font-size: 22px;
+  color: #bbb;
+  margin-top: 16px;
+  display: block;
+}
