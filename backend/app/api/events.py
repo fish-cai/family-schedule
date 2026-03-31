@@ -29,7 +29,9 @@ async def create_event(
     )
     event = result.scalar_one()
     nickname = event.creator.nickname if event.creator else ""
-    d = event_service._event_to_dict(event, nickname)
+    from app.services.reminder_service import get_remind_minutes
+    rm = await get_remind_minutes(db, event.id, current_user.id)
+    d = event_service._event_to_dict(event, nickname, rm)
     return EventResponse(**d)
 
 
