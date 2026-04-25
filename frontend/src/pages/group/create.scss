@@ -1,20 +1,192 @@
-.group-create-page { min-height: 100vh; background: #f8f9fa; }
-.form-section { background: #fff; padding: 24px 32px; margin-bottom: 16px; }
-.name-input { font-size: 34px; font-weight: 500; width: 100%; padding: 16px 0; }
-.form-row-label { padding: 16px 32px 8px; }
-.section-label { font-size: 24px; color: #999; }
-.icon-picker { display: flex; flex-wrap: wrap; gap: 12px; padding: 8px 32px 24px; background: #fff; }
-.icon-item {
-  padding: 12px 24px; border-radius: 8px; background: #f0f0f0;
-  &.active { background: #4A90D9; .icon-text { color: #fff; } }
+$primary: #4A6CFA;
+$primary-light: #EEF1FF;
+$text-primary: #1E2432;
+$text-secondary: #6B7280;
+$text-hint: #B0B7C3;
+$bg: #F5F6FA;
+$card-bg: #FFFFFF;
+
+.group-create-page {
+  min-height: 100vh;
+  background: $bg;
+  padding: 16px 24px;
+  padding-bottom: 120px;
 }
-.icon-text { font-size: 24px; color: #666; }
-.color-row { display: flex; gap: 20px; padding: 8px 32px 24px; background: #fff; margin-bottom: 16px; }
-.color-dot {
-  width: 56px; height: 56px; border-radius: 50%; border: 4px solid transparent;
-  &.active { border-color: #333; }
+
+/* ---------- Section Card ---------- */
+.section-card {
+  background: $card-bg;
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(30, 36, 50, 0.04);
 }
-.desc-input { font-size: 28px; width: 100%; min-height: 120px; }
-.save-section { padding: 48px 32px; }
-.save-btn { background: #4A90D9; border-radius: 16px; padding: 24px 0; text-align: center; &.disabled { opacity: 0.5; } }
-.save-text { font-size: 32px; color: #fff; font-weight: 600; }
+
+.field-label {
+  font-size: 24px;
+  color: $text-hint;
+  font-weight: 500;
+  margin-bottom: 16px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ---------- Name Input ---------- */
+.name-input {
+  font-size: 34px;
+  font-weight: 600;
+  width: 100%;
+  padding: 12px 0;
+  color: $text-primary;
+  border-bottom: 2px solid $bg;
+
+  &:focus {
+    border-bottom-color: $primary;
+  }
+}
+
+/* ---------- Tags ---------- */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tag-item {
+  padding: 12px 28px;
+  border-radius: 32px;
+  background: $bg;
+  border: 2px solid transparent;
+
+  &.active {
+    background: $primary-light;
+    border-color: $primary;
+
+    .tag-text {
+      color: $primary;
+      font-weight: 600;
+    }
+  }
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.tag-text {
+  font-size: 26px;
+  color: $text-secondary;
+}
+
+.tag-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tag-input {
+  flex: 1;
+  font-size: 26px;
+  padding: 14px 20px;
+  background: $bg;
+  border-radius: 16px;
+  color: $text-primary;
+}
+
+.tag-add-btn {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $primary;
+  border-radius: 16px;
+  flex-shrink: 0;
+
+  &.disabled {
+    background: #E5E7EB;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.tag-add-text {
+  font-size: 36px;
+  color: #fff;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* ---------- Color Grid ---------- */
+.color-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.color-item {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid transparent;
+  box-sizing: border-box;
+
+  &.active {
+    border-color: $text-primary;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+.color-check {
+  font-size: 28px;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ---------- Description ---------- */
+.desc-input {
+  font-size: 28px;
+  width: 100%;
+  min-height: 100px;
+  color: $text-primary;
+  line-height: 1.6;
+}
+
+/* ---------- Save ---------- */
+.save-section {
+  padding: 24px 0;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #4A6CFA, #6C8FFF);
+  border-radius: 20px;
+  padding: 28px 0;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(74, 108, 250, 0.3);
+
+  &.disabled {
+    opacity: 0.4;
+    box-shadow: none;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.save-text {
+  font-size: 32px;
+  color: #fff;
+  font-weight: 600;
+}

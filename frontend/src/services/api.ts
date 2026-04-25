@@ -12,10 +12,7 @@ import type {
   ParseEventResponse,
 } from "../types";
 
-const BASE_URL =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:8000"
-    : "https://your-production-api.com";
+const BASE_URL = "https://fishschedule.cloud";
 
 interface RequestOptions {
   url: string;

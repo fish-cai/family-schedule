@@ -5,20 +5,25 @@ import * as api from "../services/api";
 interface EventState {
   events: EventResponse[];
   loading: boolean;
-  fetchEvents: (start: string, end: string) => Promise<void>;
+  filterGroupId: string | null; // null = "全部", "personal" = 个人, uuid = 某个组
+  setFilterGroupId: (id: string | null) => void;
+  fetchEvents: (start: string, end: string, groupId?: string) => Promise<void>;
   createEvent: (data: EventCreate) => Promise<EventResponse>;
   updateEvent: (id: string, data: EventUpdate) => Promise<EventResponse>;
   deleteEvent: (id: string) => Promise<void>;
 }
 
-export const useEventStore = create<EventState>((set) => ({
+export const useEventStore = create<EventState>((set, get) => ({
   events: [],
   loading: false,
+  filterGroupId: null,
 
-  fetchEvents: async (start, end) => {
+  setFilterGroupId: (id) => set({ filterGroupId: id }),
+
+  fetchEvents: async (start, end, groupId) => {
     set({ loading: true });
     try {
-      const events = await api.getEvents(start, end);
+      const events = await api.getEvents(start, end, groupId || undefined);
       set({ events, loading: false });
     } catch (e) {
       console.error("Fetch events failed:", e);

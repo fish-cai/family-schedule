@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, Input, Switch, Picker } from "@tarojs/components";
+import { View, Text, Input, Switch, Picker, Textarea } from "@tarojs/components";
 import Taro, { useRouter } from "@tarojs/taro";
 import { useEventStore } from "../../stores/event";
 import { useGroupStore } from "../../stores/group";
@@ -72,6 +72,7 @@ export default function EventCreatePage() {
     return toTimeStr(d);
   });
   const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
   const [groupId, setGroupId] = useState<string | null>(null);
   const [visibility, setVisibility] = useState("public");
   const [color, setColor] = useState(PRESET_COLORS[0]);
@@ -98,6 +99,7 @@ export default function EventCreatePage() {
           setEndTime(toTimeStr(end));
         }
         setLocation(e.location);
+        setDescription(e.description || "");
         setGroupId(e.group_id);
         setVisibility(e.visibility);
         if (e.color) setColor(e.color);
@@ -125,6 +127,7 @@ export default function EventCreatePage() {
           setEndTime(toTimeStr(end));
         }
         if (result.location) setLocation(result.location);
+        if (result.description) setDescription(result.description);
         if (result.repeat_rule) setRepeatRule(result.repeat_rule);
       } catch (e) {
         console.error("Failed to parse ai_result:", e);
@@ -164,6 +167,7 @@ export default function EventCreatePage() {
       if (isEdit && eventId) {
         const data: EventUpdate = {
           title: title.trim(),
+          description: description.trim(),
           is_all_day: isAllDay,
           start_time: startISO,
           end_time: endISO,
@@ -177,6 +181,7 @@ export default function EventCreatePage() {
       } else {
         const data: EventCreate = {
           title: title.trim(),
+          description: description.trim(),
           is_all_day: isAllDay,
           start_time: startISO,
           end_time: endISO,
@@ -256,6 +261,18 @@ export default function EventCreatePage() {
           value={location}
           onInput={(e) => setLocation(e.detail.value)}
           maxlength={256}
+        />
+      </View>
+
+      {/* Description */}
+      <View className="form-section">
+        <Textarea
+          className="desc-input"
+          placeholder="添加备注（可选）"
+          value={description}
+          onInput={(e) => setDescription(e.detail.value)}
+          maxlength={1024}
+          autoHeight
         />
       </View>
 

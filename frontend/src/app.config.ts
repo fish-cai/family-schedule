@@ -8,10 +8,12 @@ export default defineAppConfig({
     "pages/event/create",
     "pages/event/detail",
     "pages/index/index",
+    "pages/legal/privacy",
+    "pages/legal/agreement",
   ],
   tabBar: {
-    color: "#999999",
-    selectedColor: "#4A90D9",
+    color: "#AAAAAA",
+    selectedColor: "#4A6CFA",
     backgroundColor: "#ffffff",
     borderStyle: "white",
     list: [
@@ -37,8 +39,9 @@ export default defineAppConfig({
   },
   window: {
     backgroundTextStyle: "light",
-    navigationBarBackgroundColor: "#fff",
+    navigationBarBackgroundColor: "#4A6CFA",
     navigationBarTitleText: "共享日程",
-    navigationBarTextStyle: "black",
+    navigationBarTextStyle: "white",
   },
+  lazyCodeLoading: "requiredComponents",
 });

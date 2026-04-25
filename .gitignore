@@ -25,6 +25,9 @@ Thumbs.db
 # Taro
 frontend/.temp/
 
+# WeChat devtools local config
+frontend/project.private.config.json
+
 # Docker
 pgdata/
 

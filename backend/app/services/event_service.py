@@ -1,5 +1,6 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
 from sqlalchemy import or_, select
@@ -17,6 +18,92 @@ from app.services.reminder_service import (
     get_remind_minutes,
     update_reminders,
 )
+
+BYDAY_MAP = {"MO": 0, "TU": 1, "WE": 2, "TH": 3, "FR": 4, "SA": 5, "SU": 6}
+
+
+def _expand_recurring(event_dict: dict, query_start: datetime, query_end: datetime) -> list[dict]:
+    """Expand a recurring event into virtual instances within the query range."""
+    rule = event_dict.get("repeat_rule")
+    if not rule or not rule.get("freq"):
+        return [event_dict]
+
+    freq = rule["freq"]
+    interval = rule.get("interval", 1)
+    byday = rule.get("byday")
+
+    tz = ZoneInfo("Asia/Shanghai")
+    orig_start = event_dict["start_time"]
+    if isinstance(orig_start, str):
+        orig_start = datetime.fromisoformat(orig_start)
+    if orig_start.tzinfo is None:
+        orig_start = orig_start.replace(tzinfo=tz)
+
+    orig_end = event_dict.get("end_time")
+    duration = None
+    if orig_end:
+        if isinstance(orig_end, str):
+            orig_end = datetime.fromisoformat(orig_end)
+        if orig_end.tzinfo is None:
+            orig_end = orig_end.replace(tzinfo=tz)
+        duration = orig_end - orig_start
+
+    # Ensure query times are tz-aware
+    if query_start.tzinfo is None:
+        query_start = query_start.replace(tzinfo=tz)
+    if query_end.tzinfo is None:
+        query_end = query_end.replace(tzinfo=tz)
+
+    instances = []
+    # Limit expansion to 90 days max to prevent runaway loops
+    max_date = min(query_end, orig_start + timedelta(days=90))
+
+    if freq == "daily":
+        cur = orig_start
+        while cur <= max_date:
+            if cur >= query_start - timedelta(days=1):
+                inst = dict(event_dict)
+                inst["start_time"] = cur
+                inst["end_time"] = cur + duration if duration else None
+                instances.append(inst)
+            cur += timedelta(days=interval)
+
+    elif freq == "weekly" and byday:
+        target_days = [BYDAY_MAP[d] for d in byday if d in BYDAY_MAP]
+        cur = orig_start - timedelta(days=orig_start.weekday())  # Monday of that week
+        while cur <= max_date:
+            for wd in target_days:
+                day = cur + timedelta(days=wd)
+                if day < orig_start:
+                    continue
+                if day > max_date:
+                    break
+                if day >= query_start - timedelta(days=1):
+                    inst = dict(event_dict)
+                    inst["start_time"] = day.replace(
+                        hour=orig_start.hour, minute=orig_start.minute, second=orig_start.second
+                    )
+                    inst["end_time"] = inst["start_time"] + duration if duration else None
+                    instances.append(inst)
+            cur += timedelta(weeks=interval)
+
+    elif freq == "monthly":
+        target_day = orig_start.day
+        cur_month = orig_start.replace(day=1)
+        while cur_month <= max_date:
+            try:
+                day = cur_month.replace(day=target_day)
+            except ValueError:
+                cur_month = (cur_month + timedelta(days=32)).replace(day=1)
+                continue
+            if day >= orig_start and day >= query_start - timedelta(days=1) and day <= max_date:
+                inst = dict(event_dict)
+                inst["start_time"] = day
+                inst["end_time"] = day + duration if duration else None
+                instances.append(inst)
+            cur_month = (cur_month + timedelta(days=32)).replace(day=1)
+
+    return instances if instances else [event_dict]
 
 
 def _event_to_dict(
@@ -103,8 +190,14 @@ async def query_events(
     end: datetime,
     group_id: uuid.UUID | None = None,
 ) -> list[dict]:
-    time_filter = Event.start_time < end, or_(
-        Event.end_time > start, Event.end_time.is_(None)
+    # Match events that either fall in range OR have a repeat rule (starting before range end)
+    time_filter = (
+        or_(
+            # Normal events in range
+            (Event.start_time < end) & or_(Event.end_time > start, Event.end_time.is_(None)),
+            # Recurring events that started before range end
+            (Event.repeat_rule.isnot(None)) & (Event.start_time < end),
+        ),
     )
 
     if group_id is not None:
@@ -161,11 +254,16 @@ async def query_events(
                 rm = await get_remind_minutes(db, event.id, user_id)
             else:
                 rm = []
-            result_list.append(_event_to_dict(event, nickname, rm))
+            base = _event_to_dict(event, nickname, rm)
+            for inst in _expand_recurring(base, start, end):
+                result_list.append(inst)
         elif vis == EventVisibility.BUSY:
-            result_list.append(_event_to_busy_dict(event))
+            base = _event_to_busy_dict(event)
+            for inst in _expand_recurring(base, start, end):
+                result_list.append(inst)
         # PRIVATE from others: skip entirely
 
+    result_list.sort(key=lambda e: e["start_time"] if e["start_time"] else "")
     return result_list
 
 

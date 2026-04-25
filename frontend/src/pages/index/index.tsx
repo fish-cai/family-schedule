@@ -3,6 +3,7 @@ import { View, Text } from "@tarojs/components";
 import Taro, { useRouter } from "@tarojs/taro";
 import { useAuthStore } from "../../stores/auth";
 import { joinGroupByCode } from "../../services/api";
+import "./index.scss";
 
 export default function Index() {
   const { token, loading, login } = useAuthStore();
@@ -43,8 +44,10 @@ export default function Index() {
   }, [token, loading]);
 
   return (
-    <View style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-      <Text>加载中...</Text>
+    <View className="loading-page">
+      <Text className="loading-logo">📅</Text>
+      <Text className="loading-title">共享日程</Text>
+      <Text className="loading-subtitle">为共享而生的智能日程</Text>
     </View>
   );
 }

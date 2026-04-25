@@ -1,13 +1,21 @@
+$primary: #4A6CFA;
+$text-primary: #1E2432;
+$text-secondary: #6B7280;
+$text-hint: #B0B7C3;
+$bg: #F5F6FA;
+$card-bg: #FFFFFF;
+$danger: #F25C54;
+
 .detail-page {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: $bg;
 }
 
 .loading-text {
   display: block;
   text-align: center;
   padding: 96px 0;
-  color: #999;
+  color: $text-hint;
   font-size: 28px;
 }
 
@@ -16,37 +24,40 @@
   justify-content: space-between;
   align-items: center;
   padding: 32px;
-  background: #fff;
+  background: $card-bg;
 }
 
 .detail-title {
   font-size: 40px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: $text-primary;
   flex: 1;
 }
 
 .edit-btn {
   font-size: 28px;
-  color: #4A90D9;
+  color: $primary;
   font-weight: 600;
-  padding: 8px 16px;
+  padding: 10px 20px;
+  background: #EEF1FF;
+  border-radius: 24px;
 }
 
 .detail-divider {
   height: 16px;
-  background: #f8f9fa;
+  background: $bg;
 }
 
 .info-section {
-  background: #fff;
+  background: $card-bg;
   padding: 8px 0;
+  margin: 0 0 16px;
 }
 
 .info-row {
   display: flex;
   align-items: center;
-  padding: 20px 32px;
+  padding: 22px 32px;
   gap: 16px;
 }
 
@@ -59,20 +70,23 @@
 
 .info-label {
   font-size: 28px;
-  color: #999;
+  color: $text-hint;
   width: 120px;
   flex-shrink: 0;
+  font-weight: 500;
 }
 
 .info-text {
   font-size: 28px;
-  color: #333;
+  color: $text-primary;
+  font-weight: 500;
 }
 
 .group-badge {
   font-size: 24px;
-  padding: 6px 16px;
-  border-radius: 8px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-weight: 500;
 }
 
 .delete-section {
@@ -82,5 +96,6 @@
 
 .delete-btn {
   font-size: 28px;
-  color: #FF4D4F;
+  color: $danger;
+  font-weight: 500;
 }

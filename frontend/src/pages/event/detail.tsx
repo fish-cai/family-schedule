@@ -13,6 +13,20 @@ const VISIBILITY_LABELS: Record<string, string> = {
   private: "私密",
 };
 
+function formatRepeatRule(rule: Record<string, unknown>): string {
+  const freq = rule.freq as string;
+  const dayMap: Record<string, string> = {
+    MO: "一", TU: "二", WE: "三", TH: "四", FR: "五", SA: "六", SU: "日",
+  };
+  if (freq === "daily") return "每天重复";
+  if (freq === "weekly" && Array.isArray(rule.byday)) {
+    const days = (rule.byday as string[]).map((d) => "周" + (dayMap[d] || d)).join("、");
+    return `每周${days}重复`;
+  }
+  if (freq === "monthly") return "每月重复";
+  return "重复";
+}
+
 function formatDateTime(iso: string, isAllDay: boolean): string {
   const d = new Date(iso);
   const date = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
@@ -134,6 +148,13 @@ export default function EventDetailPage() {
             <Text className="info-text">
               提前 {event.remind_minutes[0]} 分钟提醒
             </Text>
+          </View>
+        )}
+
+        {event.repeat_rule && event.repeat_rule.freq && (
+          <View className="info-row">
+            <Text className="info-icon">🔁</Text>
+            <Text className="info-text">{formatRepeatRule(event.repeat_rule)}</Text>
           </View>
         )}
 

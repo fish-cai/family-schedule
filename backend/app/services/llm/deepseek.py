@@ -23,6 +23,7 @@ class DeepSeekProvider(LLMProvider):
                         {"role": "user", "content": user_message},
                     ],
                     "temperature": 0.1,
+                    "max_tokens": 300,
                 },
             )
             response.raise_for_status()

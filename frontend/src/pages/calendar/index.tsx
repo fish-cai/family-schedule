@@ -1,7 +1,8 @@
 import { useEffect, useCallback, useState } from "react";
-import { View, Text } from "@tarojs/components";
+import { View, Text, ScrollView } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
 import CalendarGrid from "../../components/calendar-grid";
+import { useAuthStore } from "../../stores/auth";
 import { useCalendarStore } from "../../stores/calendar";
 import { useEventStore } from "../../stores/event";
 import { useGroupStore } from "../../stores/group";
@@ -27,35 +28,44 @@ function formatTime(isoString: string): string {
 
 export default function CalendarPage() {
   const { currentMonth, selectedDate, setMonth, goToToday } = useCalendarStore();
-  const { events, loading, fetchEvents } = useEventStore();
+  const { events, loading, fetchEvents, filterGroupId, setFilterGroupId } = useEventStore();
   const { groups, fetchGroups, getGroupColor } = useGroupStore();
+  const token = useAuthStore((s) => s.token);
 
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [showAiInput, setShowAiInput] = useState(false);
 
   const loadMonthEvents = useCallback(() => {
+    if (!token) return;
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const start = new Date(year, month, 1).toISOString();
     const end = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
-    fetchEvents(start, end);
-  }, [currentMonth, fetchEvents]);
+    // "personal" filter is handled client-side; pass group_id for specific group
+    const apiGroupId = filterGroupId && filterGroupId !== "personal" ? filterGroupId : undefined;
+    fetchEvents(start, end, apiGroupId);
+  }, [currentMonth, fetchEvents, token, filterGroupId]);
 
   useEffect(() => {
+    if (!token) return;
     fetchGroups();
-  }, [fetchGroups]);
+  }, [fetchGroups, token]);
 
   useEffect(() => {
     loadMonthEvents();
   }, [loadMonthEvents]);
 
-  // Reload when returning from create/edit
   useDidShow(() => {
     loadMonthEvents();
   });
 
+  // Filter events for display
+  const displayEvents = filterGroupId === "personal"
+    ? events.filter((e) => !e.group_id)
+    : events;
+
   // Filter events for selected date
-  const dayEvents = events.filter((e) => {
+  const dayEvents = displayEvents.filter((e) => {
     const start = new Date(e.start_time);
     return (
       start.getFullYear() === selectedDate.getFullYear() &&
@@ -91,8 +101,40 @@ export default function CalendarPage() {
     Taro.navigateTo({ url: `/pages/event/create?date=${dateStr}` });
   };
 
+  // Build filter tabs
+  const filterTabs: { id: string | null; label: string; color?: string }[] = [
+    { id: null, label: "全部" },
+    { id: "personal", label: "个人" },
+    ...groups.map((g) => ({ id: g.id, label: g.name, color: g.color })),
+  ];
+
   return (
     <View className="calendar-page">
+      {/* Filter Tabs */}
+      <ScrollView scrollX className="filter-bar" enableFlex>
+        {filterTabs.map((tab) => {
+          const isActive = filterGroupId === tab.id;
+          return (
+            <View
+              key={tab.id || "__all__"}
+              className={`filter-tab ${isActive ? "active" : ""}`}
+              style={isActive && tab.color ? { background: tab.color + "18", borderColor: tab.color } : {}}
+              onClick={() => setFilterGroupId(tab.id)}
+            >
+              {tab.color && (
+                <View className="filter-dot" style={{ backgroundColor: tab.color }} />
+              )}
+              <Text
+                className="filter-text"
+                style={isActive && tab.color ? { color: tab.color } : {}}
+              >
+                {tab.label}
+              </Text>
+            </View>
+          );
+        })}
+      </ScrollView>
+
       {/* Header */}
       <View className="header">
         <View className="header-left">
@@ -108,7 +150,7 @@ export default function CalendarPage() {
       </View>
 
       {/* Calendar Grid */}
-      <CalendarGrid events={events} getGroupColor={getGroupColor} />
+      <CalendarGrid events={displayEvents} getGroupColor={getGroupColor} />
 
       {/* Divider */}
       <View className="divider" />
@@ -123,14 +165,14 @@ export default function CalendarPage() {
           <Text className="hint">暂无日程</Text>
         )}
 
-        {dayEvents.map((event) => {
+        {dayEvents.map((event, idx) => {
           const isBusy = event.title === "有安排";
           const groupName = getGroupName(event.group_id);
           const color = getGroupColor(event.group_id);
 
           return (
             <View
-              key={event.id}
+              key={`${event.id}-${idx}`}
               className={`event-card ${isBusy ? "busy" : ""}`}
               style={{ borderLeftColor: color }}
               onClick={() => handleEventClick(event.id)}

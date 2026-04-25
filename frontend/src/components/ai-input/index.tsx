@@ -46,26 +46,39 @@ export default function AiInput({ visible, selectedDate, onClose }: AiInputProps
           <Text className="ai-title">AI 智能创建</Text>
           <Text className="ai-close" onClick={onClose}>×</Text>
         </View>
-        <View className="ai-body">
-          <Input
-            className="ai-input"
-            placeholder='描述你的日程，如"明天下午3点开会"'
-            value={text}
-            onInput={(e) => setText(e.detail.value)}
-            maxlength={500}
-            confirmType="send"
-            onConfirm={handleSend}
-          />
-          <View
-            className={`ai-send ${loading || !text.trim() ? "disabled" : ""}`}
-            onClick={!loading && text.trim() ? handleSend : undefined}
-          >
-            <Text className="ai-send-text">{loading ? "解析中..." : "发送"}</Text>
+        {loading ? (
+          <View className="ai-loading">
+            <View className="ai-loading-dots">
+              <View className="ai-loading-dot" />
+              <View className="ai-loading-dot" />
+              <View className="ai-loading-dot" />
+            </View>
+            <Text className="ai-loading-text">AI 正在理解你的日程...</Text>
           </View>
-        </View>
-        <Text className="ai-hint">
-          支持自然语言，如"每周三下午3点接小明放学"、"下周五全天团建"
-        </Text>
+        ) : (
+          <>
+            <View className="ai-body">
+              <Input
+                className="ai-input"
+                placeholder='描述你的日程，如"明天下午3点开会"'
+                value={text}
+                onInput={(e) => setText(e.detail.value)}
+                maxlength={500}
+                confirmType="send"
+                onConfirm={handleSend}
+              />
+              <View
+                className={`ai-send ${!text.trim() ? "disabled" : ""}`}
+                onClick={text.trim() ? handleSend : undefined}
+              >
+                <Text className="ai-send-text">发送</Text>
+              </View>
+            </View>
+            <Text className="ai-hint">
+              支持自然语言，如"每周三下午3点接小明放学"、"下周五全天团建"
+            </Text>
+          </>
+        )}
       </View>
     </View>
   );

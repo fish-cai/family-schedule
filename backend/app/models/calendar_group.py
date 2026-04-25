@@ -8,7 +8,7 @@ from app.models.base import Base, TimestampMixin
 
 
 def generate_invite_code() -> str:
-    return secrets.token_urlsafe(6)[:6].upper()
+    return secrets.token_urlsafe(8)[:8].upper()
 
 
 class CalendarGroup(TimestampMixin, Base):
