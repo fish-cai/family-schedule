@@ -1,10 +1,30 @@
-import { View, Text, Image } from "@tarojs/components";
+import { View, Text, Image, Input } from "@tarojs/components";
+import { useState, useCallback } from "react";
 import Taro from "@tarojs/taro";
 import { useAuthStore } from "../../stores/auth";
+import { updateProfile } from "../../services/api";
 import "./index.scss";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, setUser } = useAuthStore();
+  const [editingNickname, setEditingNickname] = useState(false);
+
+  const handleNicknameChange = useCallback(
+    async (e) => {
+      const newNickname = e.detail.value?.trim();
+      setEditingNickname(false);
+      if (newNickname && newNickname !== user?.nickname) {
+        try {
+          const updated = await updateProfile({ nickname: newNickname });
+          setUser(updated);
+          Taro.showToast({ title: "昵称已更新", icon: "success" });
+        } catch {
+          Taro.showToast({ title: "更新失败", icon: "none" });
+        }
+      }
+    },
+    [user, setUser]
+  );
 
   const handleLogout = () => {
     Taro.showModal({
@@ -29,7 +49,19 @@ export default function ProfilePage() {
             <Text className="avatar-text">{(user?.nickname || "?")[0]}</Text>
           )}
         </View>
-        <Text className="nickname">{user?.nickname || "微信用户"}</Text>
+        <Text className="nickname" onClick={() => setEditingNickname(true)}>
+          {editingNickname ? "" : (user?.nickname || "点击设置昵称")}
+        </Text>
+        {editingNickname && (
+          <Input
+            className="nickname-input"
+            type="nickname"
+            placeholder="请输入昵称"
+            focus
+            onConfirm={handleNicknameChange}
+            onBlur={handleNicknameChange}
+          />
+        )}
       </View>
 
       <View className="menu-section">

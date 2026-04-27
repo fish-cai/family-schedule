@@ -10,6 +10,7 @@ interface AuthState {
   login: () => Promise<void>;
   loadFromStorage: () => Promise<void>;
   logout: () => void;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -57,4 +58,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     Taro.removeStorageSync("access_token");
     set({ token: null, user: null });
   },
+
+  setUser: (user) => set({ user }),
 }));

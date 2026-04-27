@@ -24,7 +24,7 @@ class CalendarGroup(TimestampMixin, Base):
     invite_code: Mapped[str] = mapped_column(
         String(10), unique=True, index=True, default=generate_invite_code
     )
-    max_members: Mapped[int] = mapped_column(Integer, default=10)
+    max_members: Mapped[int] = mapped_column(Integer, default=100)
 
     creator = relationship("User")
     members = relationship("GroupMember", back_populates="group")

@@ -10,6 +10,11 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class UserUpdateRequest(BaseModel):
+    nickname: str | None = None
+    avatar: str | None = None
+
+
 class UserResponse(BaseModel):
     id: str
     nickname: str

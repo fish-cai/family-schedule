@@ -78,6 +78,14 @@ export async function getMe(): Promise<User> {
   return request<User>({ url: "/api/users/me" });
 }
 
+export async function updateProfile(data: { nickname?: string; avatar?: string }): Promise<User> {
+  return request<User>({
+    url: "/api/users/me",
+    method: "PUT",
+    data: data as unknown as Record<string, unknown>,
+  });
+}
+
 // Groups
 export async function getMyGroups(): Promise<GroupResponse[]> {
   return request<GroupResponse[]>({ url: "/api/groups" });

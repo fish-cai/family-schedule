@@ -1,11 +1,12 @@
 import { useEffect, useCallback, useState } from "react";
-import { View, Text, ScrollView } from "@tarojs/components";
+import { View, Text, ScrollView, Input } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
 import CalendarGrid from "../../components/calendar-grid";
 import { useAuthStore } from "../../stores/auth";
 import { useCalendarStore } from "../../stores/calendar";
 import { useEventStore } from "../../stores/event";
 import { useGroupStore } from "../../stores/group";
+import { updateProfile } from "../../services/api";
 import AiInput from "../../components/ai-input";
 import "./index.scss";
 
@@ -31,9 +32,33 @@ export default function CalendarPage() {
   const { events, loading, fetchEvents, filterGroupId, setFilterGroupId } = useEventStore();
   const { groups, fetchGroups, getGroupColor } = useGroupStore();
   const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
 
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [showAiInput, setShowAiInput] = useState(false);
+  const [showNicknamePrompt, setShowNicknamePrompt] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState("");
+
+  // Prompt for nickname if empty
+  useEffect(() => {
+    if (user && !user.nickname) {
+      setShowNicknamePrompt(true);
+    }
+  }, [user]);
+
+  const handleNicknameSave = async () => {
+    const name = nicknameInput.trim();
+    if (!name) return;
+    try {
+      const updated = await updateProfile({ nickname: name });
+      setUser(updated);
+      setShowNicknamePrompt(false);
+      Taro.showToast({ title: "设置成功", icon: "success" });
+    } catch {
+      Taro.showToast({ title: "设置失败", icon: "none" });
+    }
+  };
 
   const loadMonthEvents = useCallback(() => {
     if (!token) return;
@@ -227,6 +252,27 @@ export default function CalendarPage() {
         selectedDate={selectedDate.toISOString().slice(0, 10)}
         onClose={() => setShowAiInput(false)}
       />
+
+      {/* Nickname Prompt */}
+      {showNicknamePrompt && (
+        <View className="nickname-overlay">
+          <View className="nickname-modal">
+            <Text className="nickname-modal-title">设置你的昵称</Text>
+            <Text className="nickname-modal-desc">让家人和朋友认出你</Text>
+            <Input
+              className="nickname-modal-input"
+              type="nickname"
+              placeholder="点击输入微信昵称"
+              value={nicknameInput}
+              onInput={(e) => setNicknameInput(e.detail.value)}
+              onConfirm={handleNicknameSave}
+            />
+            <View className="nickname-modal-btn" onClick={handleNicknameSave}>
+              <Text className="nickname-modal-btn-text">确定</Text>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

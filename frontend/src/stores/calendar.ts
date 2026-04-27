@@ -13,7 +13,7 @@ interface CalendarState {
 export const useCalendarStore = create<CalendarState>((set) => ({
   currentMonth: new Date(),
   selectedDate: new Date(),
-  isExpanded: false,
+  isExpanded: true,
 
   setMonth: (date) => set({ currentMonth: date }),
 

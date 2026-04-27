@@ -260,3 +260,72 @@ $danger: #F25C54;
   color: $text-primary;
   font-weight: 500;
 }
+
+/* ---------- Nickname Prompt ---------- */
+.nickname-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.nickname-modal {
+  width: 560px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nickname-modal-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: $text-primary;
+  margin-bottom: 12px;
+}
+
+.nickname-modal-desc {
+  font-size: 26px;
+  color: $text-secondary;
+  margin-bottom: 40px;
+}
+
+.nickname-modal-input {
+  width: 100%;
+  height: 80px;
+  border: 2px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 0 24px;
+  font-size: 30px;
+  color: $text-primary;
+  margin-bottom: 32px;
+  box-sizing: border-box;
+}
+
+.nickname-modal-btn {
+  width: 100%;
+  height: 80px;
+  background: $primary;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.nickname-modal-btn-text {
+  font-size: 30px;
+  color: #fff;
+  font-weight: 600;
+}

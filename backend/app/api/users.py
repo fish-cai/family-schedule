@@ -5,8 +5,8 @@ from app.api.deps import get_current_user, get_db
 from app.core.config import settings
 from app.core.security import create_access_token
 from app.models.user import User
-from app.schemas.user import TokenResponse, UserResponse, WechatLoginRequest
-from app.services.user_service import get_or_create_user
+from app.schemas.user import TokenResponse, UserResponse, UserUpdateRequest, WechatLoginRequest
+from app.services.user_service import get_or_create_user, update_user
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -34,4 +34,20 @@ async def get_me(current_user: User = Depends(get_current_user)):
         id=str(current_user.id),
         nickname=current_user.nickname,
         avatar=current_user.avatar,
+    )
+
+
+@router.put("/me", response_model=UserResponse)
+async def update_me(
+    request: UserUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user = await update_user(
+        db, current_user, nickname=request.nickname, avatar=request.avatar
+    )
+    return UserResponse(
+        id=str(user.id),
+        nickname=user.nickname,
+        avatar=user.avatar,
     )

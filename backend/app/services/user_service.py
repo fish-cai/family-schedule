@@ -10,7 +10,7 @@ async def get_user_by_openid(db: AsyncSession, openid: str) -> User | None:
 
 
 async def create_user(db: AsyncSession, openid: str) -> User:
-    user = User(openid=openid, nickname="微信用户")
+    user = User(openid=openid, nickname="")
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -21,4 +21,16 @@ async def get_or_create_user(db: AsyncSession, openid: str) -> User:
     user = await get_user_by_openid(db, openid)
     if user is None:
         user = await create_user(db, openid)
+    return user
+
+
+async def update_user(
+    db: AsyncSession, user: User, nickname: str | None = None, avatar: str | None = None
+) -> User:
+    if nickname is not None:
+        user.nickname = nickname
+    if avatar is not None:
+        user.avatar = avatar
+    await db.commit()
+    await db.refresh(user)
     return user
