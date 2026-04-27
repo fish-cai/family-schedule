@@ -1,5 +1,5 @@
-import { View, Text, Image, Input } from "@tarojs/components";
-import { useState, useCallback } from "react";
+import { View, Text, Image, Input, Button } from "@tarojs/components";
+import { useState, useCallback, useEffect } from "react";
 import Taro from "@tarojs/taro";
 import { useAuthStore } from "../../stores/auth";
 import { updateProfile } from "../../services/api";
@@ -7,24 +7,54 @@ import "./index.scss";
 
 export default function ProfilePage() {
   const { user, logout, setUser } = useAuthStore();
-  const [editingNickname, setEditingNickname] = useState(false);
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState("");
+  const [avatarInput, setAvatarInput] = useState("");
+  const [nicknameFocus, setNicknameFocus] = useState(false);
 
-  const handleNicknameChange = useCallback(
-    async (e) => {
-      const newNickname = e.detail.value?.trim();
-      setEditingNickname(false);
-      if (newNickname && newNickname !== user?.nickname) {
-        try {
-          const updated = await updateProfile({ nickname: newNickname });
-          setUser(updated);
-          Taro.showToast({ title: "昵称已更新", icon: "success" });
-        } catch {
-          Taro.showToast({ title: "更新失败", icon: "none" });
-        }
-      }
-    },
-    [user, setUser]
-  );
+  useEffect(() => {
+    if (!user) return;
+    setNicknameInput(user.nickname === "微信用户" ? "" : user.nickname || "");
+    setAvatarInput(user.avatar || "");
+  }, [user]);
+
+  const handleUseWeChatNickname = useCallback(() => {
+    setNicknameInput((name) => name === "微信用户" ? "" : name);
+    setNicknameFocus(true);
+  }, []);
+
+  const handleChooseAvatar = useCallback((e: any) => {
+    const avatarUrl = e.detail?.avatarUrl;
+    if (avatarUrl) {
+      setAvatarInput(avatarUrl);
+    }
+  }, []);
+
+  const handleSaveProfile = useCallback(async () => {
+    const payload: { nickname?: string; avatar?: string } = {};
+    const nickname = nicknameInput.trim();
+
+    if (nickname && nickname !== "微信用户" && nickname !== (user?.nickname || "")) {
+      payload.nickname = nickname;
+    }
+    if (avatarInput && avatarInput !== (user?.avatar || "")) {
+      payload.avatar = avatarInput;
+    }
+
+    if (!payload.nickname && !payload.avatar) {
+      setShowProfileEditor(false);
+      return;
+    }
+
+    try {
+      const updated = await updateProfile(payload);
+      setUser(updated);
+      setShowProfileEditor(false);
+      Taro.showToast({ title: "资料已更新", icon: "success" });
+    } catch {
+      Taro.showToast({ title: "更新失败", icon: "none" });
+    }
+  }, [nicknameInput, avatarInput, user, setUser]);
 
   const handleLogout = () => {
     Taro.showModal({
@@ -39,29 +69,24 @@ export default function ProfilePage() {
     });
   };
 
+  const displayNickname = user?.nickname && user.nickname !== "微信用户" ? user.nickname : "";
+
   return (
     <View className="profile-page">
       <View className="user-section">
         <View className="avatar-placeholder">
-          {user?.avatar ? (
-            <Image className="avatar-img" src={user.avatar} />
+          {(avatarInput || user?.avatar) ? (
+            <Image className="avatar-img" src={avatarInput || user?.avatar || ""} />
           ) : (
-            <Text className="avatar-text">{(user?.nickname || "?")[0]}</Text>
+            <Text className="avatar-text">{(displayNickname || "?")[0]}</Text>
           )}
         </View>
-        <Text className="nickname" onClick={() => setEditingNickname(true)}>
-          {editingNickname ? "" : (user?.nickname || "点击设置昵称")}
+        <Text className="nickname" onClick={() => setShowProfileEditor(true)}>
+          {displayNickname || "点击设置昵称"}
         </Text>
-        {editingNickname && (
-          <Input
-            className="nickname-input"
-            type="nickname"
-            placeholder="请输入昵称"
-            focus
-            onConfirm={handleNicknameChange}
-            onBlur={handleNicknameChange}
-          />
-        )}
+        <Text className="profile-edit-hint" onClick={() => setShowProfileEditor(true)}>
+          点击编辑头像和昵称
+        </Text>
       </View>
 
       <View className="menu-section">
@@ -89,6 +114,70 @@ export default function ProfilePage() {
       <View className="logout-section">
         <Text className="logout-btn" onClick={handleLogout}>退出登录</Text>
       </View>
+
+      {showProfileEditor && (
+        <View className="profile-editor-overlay" onClick={() => setShowProfileEditor(false)}>
+          <View className="profile-editor-modal" onClick={(e) => e.stopPropagation()}>
+            <Text className="profile-editor-title">完善个人资料</Text>
+            <Text className="profile-editor-desc">建议使用微信头像和昵称，方便成员识别</Text>
+
+            <View className="profile-editor-avatar-row">
+              {(avatarInput || user?.avatar) ? (
+                <Image className="profile-editor-avatar" src={avatarInput || user?.avatar || ""} />
+              ) : (
+                <View className="profile-editor-avatar profile-editor-avatar-empty">
+                  <Text className="profile-editor-avatar-text">?</Text>
+                </View>
+              )}
+              <View className="profile-editor-avatar-actions">
+                {process.env.TARO_ENV === "weapp" ? (
+                  <Button
+                    className="profile-editor-btn profile-editor-btn-secondary"
+                    openType="chooseAvatar"
+                    onChooseAvatar={handleChooseAvatar}
+                  >
+                    选择微信头像
+                  </Button>
+                ) : null}
+                {process.env.TARO_ENV === "weapp" ? (
+                  <Button
+                    className="profile-editor-btn profile-editor-btn-secondary"
+                    onClick={handleUseWeChatNickname}
+                  >
+                    使用微信昵称
+                  </Button>
+                ) : (
+                  <Button
+                    className="profile-editor-btn profile-editor-btn-secondary"
+                    onClick={() => Taro.showToast({ title: "请在微信小程序中使用", icon: "none" })}
+                  >
+                    使用微信昵称
+                  </Button>
+                )}
+              </View>
+            </View>
+
+            <Input
+              className="profile-editor-input"
+              type="nickname"
+              placeholder="点击选择微信昵称或手动输入"
+              value={nicknameInput}
+              focus={nicknameFocus}
+              onInput={(e: any) => setNicknameInput(e.detail.value)}
+              onBlur={() => setNicknameFocus(false)}
+            />
+
+            <View className="profile-editor-footer">
+              <Button className="profile-editor-btn profile-editor-btn-ghost" onClick={() => setShowProfileEditor(false)}>
+                取消
+              </Button>
+              <Button className="profile-editor-btn profile-editor-btn-primary" onClick={handleSaveProfile}>
+                保存
+              </Button>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

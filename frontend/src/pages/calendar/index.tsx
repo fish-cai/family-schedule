@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
-import { View, Text, ScrollView, Input } from "@tarojs/components";
+import { View, Text, ScrollView, Input, Image, Button } from "@tarojs/components";
 import Taro, { useDidShow } from "@tarojs/taro";
 import CalendarGrid from "../../components/calendar-grid";
 import { useAuthStore } from "../../stores/auth";
@@ -39,21 +39,57 @@ export default function CalendarPage() {
   const [showAiInput, setShowAiInput] = useState(false);
   const [showNicknamePrompt, setShowNicknamePrompt] = useState(false);
   const [nicknameInput, setNicknameInput] = useState("");
+  const [avatarInput, setAvatarInput] = useState("");
+  const [nicknameFocus, setNicknameFocus] = useState(false);
+  const [dismissProfilePrompt, setDismissProfilePrompt] = useState(false);
 
-  // Prompt for nickname if empty
+  // Prompt for profile completion on first login
   useEffect(() => {
-    if (user && !user.nickname) {
+    if (
+      user &&
+      (!user.nickname || user.nickname === "微信用户" || !user.avatar) &&
+      !dismissProfilePrompt
+    ) {
+      setNicknameInput(user.nickname === "微信用户" ? "" : user.nickname || "");
+      setAvatarInput(user.avatar || "");
       setShowNicknamePrompt(true);
     }
-  }, [user]);
+  }, [user, dismissProfilePrompt]);
+
+  const handleUseWeChatNickname = useCallback(() => {
+    setNicknameInput((name) => name === "微信用户" ? "" : name);
+    setNicknameFocus(true);
+  }, []);
+
+  const handleChooseAvatar = useCallback((e: any) => {
+    const avatarUrl = e.detail?.avatarUrl;
+    if (avatarUrl) {
+      setAvatarInput(avatarUrl);
+    }
+  }, []);
 
   const handleNicknameSave = async () => {
+    const payload: { nickname?: string; avatar?: string } = {};
     const name = nicknameInput.trim();
-    if (!name) return;
+
+    if (name && name !== "微信用户" && name !== (user?.nickname || "")) {
+      payload.nickname = name;
+    }
+    if (avatarInput && avatarInput !== (user?.avatar || "")) {
+      payload.avatar = avatarInput;
+    }
+
+    if (!payload.nickname && !payload.avatar) {
+      setShowNicknamePrompt(false);
+      setDismissProfilePrompt(true);
+      return;
+    }
+
     try {
-      const updated = await updateProfile({ nickname: name });
+      const updated = await updateProfile(payload);
       setUser(updated);
       setShowNicknamePrompt(false);
+      setDismissProfilePrompt(true);
       Taro.showToast({ title: "设置成功", icon: "success" });
     } catch {
       Taro.showToast({ title: "设置失败", icon: "none" });
@@ -257,18 +293,68 @@ export default function CalendarPage() {
       {showNicknamePrompt && (
         <View className="nickname-overlay">
           <View className="nickname-modal">
-            <Text className="nickname-modal-title">设置你的昵称</Text>
-            <Text className="nickname-modal-desc">让家人和朋友认出你</Text>
+            <Text className="nickname-modal-title">完善个人资料</Text>
+            <Text className="nickname-modal-desc">首次进入建议设置微信头像和昵称</Text>
+
+            <View className="nickname-avatar-row">
+              {avatarInput || user?.avatar ? (
+                <Image className="nickname-avatar" src={avatarInput || user?.avatar || ""} />
+              ) : (
+                <View className="nickname-avatar nickname-avatar-empty">
+                  <Text className="nickname-avatar-text">?</Text>
+                </View>
+              )}
+              <View className="nickname-avatar-actions">
+                {process.env.TARO_ENV === "weapp" ? (
+                  <Button
+                    className="nickname-action-btn"
+                    openType="chooseAvatar"
+                    onChooseAvatar={handleChooseAvatar}
+                  >
+                    选择微信头像
+                  </Button>
+                ) : null}
+                {process.env.TARO_ENV === "weapp" ? (
+                  <Button
+                    className="nickname-action-btn"
+                    onClick={handleUseWeChatNickname}
+                  >
+                    使用微信昵称
+                  </Button>
+                ) : (
+                  <Button
+                    className="nickname-action-btn"
+                    onClick={() => Taro.showToast({ title: "请在微信小程序中使用", icon: "none" })}
+                  >
+                    使用微信昵称
+                  </Button>
+                )}
+              </View>
+            </View>
+
             <Input
               className="nickname-modal-input"
               type="nickname"
-              placeholder="点击输入微信昵称"
+              placeholder="点击选择微信昵称或手动输入"
               value={nicknameInput}
-              onInput={(e) => setNicknameInput(e.detail.value)}
+              focus={nicknameFocus}
+              onInput={(e: any) => setNicknameInput(e.detail.value)}
+              onBlur={() => setNicknameFocus(false)}
               onConfirm={handleNicknameSave}
             />
-            <View className="nickname-modal-btn" onClick={handleNicknameSave}>
-              <Text className="nickname-modal-btn-text">确定</Text>
+            <View className="nickname-modal-footer">
+              <Button
+                className="nickname-modal-btn nickname-modal-btn-ghost"
+                onClick={() => {
+                  setShowNicknamePrompt(false);
+                  setDismissProfilePrompt(true);
+                }}
+              >
+                稍后设置
+              </Button>
+              <Button className="nickname-modal-btn nickname-modal-btn-primary" onClick={handleNicknameSave}>
+                保存并继续
+              </Button>
             </View>
           </View>
         </View>
