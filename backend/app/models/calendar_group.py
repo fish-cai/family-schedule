@@ -29,3 +29,8 @@ class CalendarGroup(TimestampMixin, Base):
     creator = relationship("User")
     members = relationship("GroupMember", back_populates="group")
     events = relationship("Event", back_populates="group")
+    visible_event_links = relationship(
+        "EventVisibleGroup",
+        back_populates="group",
+        cascade="all, delete-orphan",
+    )

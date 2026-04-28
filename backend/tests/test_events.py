@@ -51,6 +51,47 @@ async def test_create_group_event(client, user_a):
     assert data["group_id"] == group_id
 
 
+async def test_create_shared_personal_event_with_multiple_visible_groups(client, user_a):
+    _, headers = user_a
+    group_a = await _create_group(client, headers)
+    group_b = await _create_group(client, headers)
+
+    payload = _event_payload()
+    payload["visible_group_ids"] = [group_a["id"], group_b["id"]]
+
+    resp = await client.post("/api/events", json=payload, headers=headers)
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["group_id"] is None
+    assert data["visible_group_ids"] == [group_a["id"], group_b["id"]]
+
+    group_resp = await client.get(
+        "/api/events",
+        params={
+            "start": "2026-04-01T00:00:00+08:00",
+            "end": "2026-04-30T23:59:59+08:00",
+            "group_id": group_b["id"],
+        },
+        headers=headers,
+    )
+    assert group_resp.status_code == 200
+    group_events = group_resp.json()
+    assert len(group_events) == 1
+    assert group_events[0]["title"] == "测试事件"
+
+
+async def test_create_shared_personal_event_requires_membership(client, user_a, user_b):
+    _, headers_a = user_a
+    _, headers_b = user_b
+    group = await _create_group(client, headers_a)
+
+    payload = _event_payload()
+    payload["visible_group_ids"] = [group["id"]]
+
+    resp = await client.post("/api/events", json=payload, headers=headers_b)
+    assert resp.status_code == 403
+
+
 async def test_create_event_not_member(client, user_a, user_b):
     _, headers_a = user_a
     _, headers_b = user_b

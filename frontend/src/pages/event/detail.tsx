@@ -35,6 +35,13 @@ function formatDateTime(iso: string, isAllDay: boolean): string {
   return `${date} ${time}`;
 }
 
+function getVisibleGroupIds(event: EventResponse): string[] {
+  if (event.visible_group_ids && event.visible_group_ids.length > 0) {
+    return event.visible_group_ids;
+  }
+  return event.group_id ? [event.group_id] : [];
+}
+
 export default function EventDetailPage() {
   const router = useRouter();
   const eventId = router.params.id;
@@ -63,12 +70,15 @@ export default function EventDetailPage() {
     );
   }
 
-  const groupName = event.group_id
-    ? groups.find((g) => g.id === event.group_id)?.name || "日历组"
-    : "个人";
-  const groupColor = event.group_id
-    ? groups.find((g) => g.id === event.group_id)?.color || "#4A90D9"
-    : "#999";
+  const visibleGroupIds = getVisibleGroupIds(event);
+  const visibleGroups = visibleGroupIds.map((groupId) => {
+    const group = groups.find((item) => item.id === groupId);
+    return {
+      id: groupId,
+      name: group?.name || "日历组",
+      color: group?.color || "#4A90D9",
+    };
+  });
 
   const handleEdit = () => {
     Taro.navigateTo({ url: `/pages/event/create?id=${event.id}` });
@@ -130,12 +140,26 @@ export default function EventDetailPage() {
 
         <View className="info-row">
           <Text className="info-icon">📋</Text>
-          <View className="group-badge" style={{ color: groupColor, backgroundColor: groupColor + "20" }}>
-            <Text>{groupName}</Text>
-          </View>
+          {visibleGroups.length > 0 ? (
+            <View className="group-badge-list">
+              {visibleGroups.map((group) => (
+                <View
+                  key={group.id}
+                  className="group-badge"
+                  style={{ color: group.color, backgroundColor: group.color + "20" }}
+                >
+                  <Text>{group.name}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View className="group-badge" style={{ color: "#999", backgroundColor: "#F0F1F5" }}>
+              <Text>个人</Text>
+            </View>
+          )}
         </View>
 
-        {event.group_id && (
+        {visibleGroups.length > 0 && (
           <View className="info-row">
             <Text className="info-icon">👁</Text>
             <Text className="info-text">{VISIBILITY_LABELS[event.visibility] || event.visibility}</Text>

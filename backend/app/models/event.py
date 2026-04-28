@@ -47,3 +47,8 @@ class Event(TimestampMixin, Base):
     creator = relationship("User", back_populates="created_events")
     group = relationship("CalendarGroup", back_populates="events")
     reminders = relationship("Reminder", back_populates="event")
+    visible_groups = relationship(
+        "EventVisibleGroup",
+        back_populates="event",
+        cascade="all, delete-orphan",
+    )

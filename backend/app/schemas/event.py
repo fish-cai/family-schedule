@@ -33,6 +33,7 @@ class EventCreate(BaseModel):
     visibility: EventVisibility = EventVisibility.PUBLIC
     repeat_rule: dict | None = None
     group_id: str | None = None
+    visible_group_ids: list[str] | None = None
     remind_minutes: list[int] | None = None
 
     @model_validator(mode="after")
@@ -53,6 +54,7 @@ class EventUpdate(BaseModel):
     color: str | None = Field(default=None, max_length=7)
     visibility: EventVisibility | None = None
     repeat_rule: dict | None = None
+    visible_group_ids: list[str] | None = None
     remind_minutes: list[int] | None = None
 
     @model_validator(mode="after")
@@ -76,6 +78,7 @@ class EventResponse(BaseModel):
     visibility: str
     repeat_rule: dict | None
     group_id: str | None
+    visible_group_ids: list[str] = []
     creator_id: str
     creator_nickname: str
     created_at: datetime

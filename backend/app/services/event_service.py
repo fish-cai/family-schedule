@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.event import Event, EventVisibility
+from app.models.event_visible_group import EventVisibleGroup
 from app.models.group_member import GroupMember, MemberRole
 from app.models.user import User
 from app.schemas.event import EventCreate, EventUpdate
@@ -109,6 +110,7 @@ def _expand_recurring(event_dict: dict, query_start: datetime, query_end: dateti
 def _event_to_dict(
     event: Event, creator_nickname: str, remind_minutes: list[int] | None = None
 ) -> dict:
+    visible_group_ids = _get_event_visible_group_ids(event)
     return {
         "id": str(event.id),
         "title": event.title,
@@ -121,6 +123,7 @@ def _event_to_dict(
         "visibility": event.visibility.value,
         "repeat_rule": event.repeat_rule,
         "group_id": str(event.group_id) if event.group_id else None,
+        "visible_group_ids": visible_group_ids,
         "creator_id": str(event.creator_id),
         "creator_nickname": creator_nickname,
         "created_at": event.created_at,
@@ -129,6 +132,7 @@ def _event_to_dict(
 
 
 def _event_to_busy_dict(event: Event) -> dict:
+    visible_group_ids = _get_event_visible_group_ids(event)
     return {
         "id": str(event.id),
         "title": "有安排",
@@ -141,6 +145,7 @@ def _event_to_busy_dict(event: Event) -> dict:
         "visibility": event.visibility.value,
         "repeat_rule": None,
         "group_id": str(event.group_id) if event.group_id else None,
+        "visible_group_ids": visible_group_ids,
         "creator_id": str(event.creator_id),
         "creator_nickname": "",
         "created_at": event.created_at,
@@ -148,10 +153,65 @@ def _event_to_busy_dict(event: Event) -> dict:
     }
 
 
+def _get_event_visible_group_ids(event: Event) -> list[str]:
+    ids: list[str] = []
+    if event.group_id:
+        ids.append(str(event.group_id))
+    for link in event.visible_groups:
+        group_id = str(link.group_id)
+        if group_id not in ids:
+            ids.append(group_id)
+    return ids
+
+
+def _parse_visible_group_ids(
+    group_id: str | None, visible_group_ids: list[str] | None
+) -> list[uuid.UUID]:
+    raw_ids = visible_group_ids if visible_group_ids is not None else ([group_id] if group_id else [])
+    unique_ids: list[uuid.UUID] = []
+    seen: set[uuid.UUID] = set()
+    for group_id_str in raw_ids:
+        parsed = uuid.UUID(group_id_str)
+        if parsed not in seen:
+            seen.add(parsed)
+            unique_ids.append(parsed)
+    return unique_ids
+
+
+async def _ensure_member_of_groups(
+    db: AsyncSession, user_id: uuid.UUID, group_ids: list[uuid.UUID]
+) -> None:
+    for group_id in group_ids:
+        role = await get_member_role(db, group_id, user_id)
+        if role is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="非组内成员，无法共享到该日历组",
+            )
+
+
+def _sync_visible_groups(event: Event, group_ids: list[uuid.UUID]) -> None:
+    event.visible_groups = [EventVisibleGroup(group_id=group_id) for group_id in group_ids]
+
+
+async def _can_view_via_visible_groups(
+    db: AsyncSession, user_id: uuid.UUID, visible_group_ids: list[str]
+) -> bool:
+    for group_id in visible_group_ids:
+        role = await get_member_role(db, uuid.UUID(group_id), user_id)
+        if role is not None:
+            return True
+    return False
+
+
 async def create_event(db: AsyncSession, user: User, data: EventCreate) -> Event:
     group_id = uuid.UUID(data.group_id) if data.group_id else None
+    visible_group_ids = _parse_visible_group_ids(data.group_id, data.visible_group_ids)
 
-    if group_id is not None:
+    if data.visible_group_ids is not None:
+        await _ensure_member_of_groups(db, user.id, visible_group_ids)
+        group_id = None
+    elif group_id is not None:
         role = await get_member_role(db, group_id, user.id)
         if role is None:
             raise HTTPException(
@@ -172,6 +232,9 @@ async def create_event(db: AsyncSession, user: User, data: EventCreate) -> Event
         group_id=group_id,
         creator_id=user.id,
     )
+    if data.visible_group_ids is not None:
+        _sync_visible_groups(event, visible_group_ids)
+
     db.add(event)
     await db.commit()
     await db.refresh(event)
@@ -211,10 +274,15 @@ async def query_events(
         result = await db.execute(
             select(Event)
             .where(
-                Event.group_id == group_id,
+                or_(
+                    Event.group_id == group_id,
+                    Event.id.in_(
+                        select(EventVisibleGroup.event_id).where(EventVisibleGroup.group_id == group_id)
+                    ),
+                ),
                 *time_filter,
             )
-            .options(selectinload(Event.creator))
+            .options(selectinload(Event.creator), selectinload(Event.visible_groups))
             .order_by(Event.start_time)
         )
         events = result.scalars().all()
@@ -230,14 +298,15 @@ async def query_events(
             select(Event)
             .where(
                 or_(
-                    # Personal events (no group)
-                    (Event.group_id.is_(None)) & (Event.creator_id == user_id),
-                    # Group events for all user's groups
+                    Event.creator_id == user_id,
                     Event.group_id.in_(group_ids) if group_ids else Event.id.is_(None),
+                    Event.id.in_(
+                        select(EventVisibleGroup.event_id).where(EventVisibleGroup.group_id.in_(group_ids))
+                    ) if group_ids else Event.id.is_(None),
                 ),
                 *time_filter,
             )
-            .options(selectinload(Event.creator))
+            .options(selectinload(Event.creator), selectinload(Event.visible_groups))
             .order_by(Event.start_time)
         )
         events = result.scalars().all()
@@ -273,7 +342,7 @@ async def get_event_detail(
     result = await db.execute(
         select(Event)
         .where(Event.id == event_id)
-        .options(selectinload(Event.creator))
+        .options(selectinload(Event.creator), selectinload(Event.visible_groups))
     )
     event = result.scalar_one_or_none()
 
@@ -284,8 +353,9 @@ async def get_event_detail(
         )
 
     is_own = str(event.creator_id) == str(user_id)
+    visible_group_ids = _get_event_visible_group_ids(event)
 
-    if event.group_id is None:
+    if not visible_group_ids:
         # Personal event: only creator can view
         if not is_own:
             raise HTTPException(
@@ -296,9 +366,9 @@ async def get_event_detail(
         rm = await get_remind_minutes(db, event.id, user_id)
         return _event_to_dict(event, nickname, rm)
     else:
-        # Group event: check membership
-        role = await get_member_role(db, event.group_id, user_id)
-        if role is None:
+        # Shared event: check membership via any visible group
+        can_view = await _can_view_via_visible_groups(db, user_id, visible_group_ids)
+        if not can_view and not is_own:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="非组内成员，无法查看日程",
@@ -324,6 +394,9 @@ async def can_edit_event(
     if str(event.creator_id) == str(user_id):
         return True
 
+    if event.visible_groups:
+        return False
+
     if event.group_id is not None:
         role = await get_member_role(db, event.group_id, user_id)
         if role in (MemberRole.CREATOR, MemberRole.ADMIN):
@@ -338,7 +411,7 @@ async def update_event(
     result = await db.execute(
         select(Event)
         .where(Event.id == event_id)
-        .options(selectinload(Event.creator))
+        .options(selectinload(Event.creator), selectinload(Event.visible_groups))
     )
     event = result.scalar_one_or_none()
 
@@ -356,6 +429,14 @@ async def update_event(
 
     update_data = data.model_dump(exclude_unset=True)
     remind_minutes = update_data.pop("remind_minutes", None)
+    visible_group_ids_raw = update_data.pop("visible_group_ids", None)
+
+    if visible_group_ids_raw is not None:
+        visible_group_ids = _parse_visible_group_ids(None, visible_group_ids_raw)
+        await _ensure_member_of_groups(db, user_id, visible_group_ids)
+        event.group_id = None
+        _sync_visible_groups(event, visible_group_ids)
+
     for field, value in update_data.items():
         setattr(event, field, value)
 
@@ -370,7 +451,7 @@ async def update_event(
     result = await db.execute(
         select(Event)
         .where(Event.id == event_id)
-        .options(selectinload(Event.creator))
+        .options(selectinload(Event.creator), selectinload(Event.visible_groups))
     )
     event = result.scalar_one()
     nickname = event.creator.nickname if event.creator else ""
@@ -382,7 +463,9 @@ async def delete_event(
     db: AsyncSession, event_id: uuid.UUID, user_id: uuid.UUID
 ) -> None:
     result = await db.execute(
-        select(Event).where(Event.id == event_id)
+        select(Event)
+        .where(Event.id == event_id)
+        .options(selectinload(Event.visible_groups))
     )
     event = result.scalar_one_or_none()
 

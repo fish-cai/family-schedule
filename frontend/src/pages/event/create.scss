@@ -17,6 +17,18 @@ $card-bg: #FFFFFF;
   margin-bottom: 16px;
 }
 
+.group-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.group-section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .title-input {
   font-size: 34px;
   font-weight: 600;
@@ -42,6 +54,12 @@ $card-bg: #FFFFFF;
   font-weight: 500;
 }
 
+.group-hint {
+  font-size: 24px;
+  color: $text-hint;
+  line-height: 1.5;
+}
+
 .form-input {
   font-size: 28px;
   color: $text-primary;
@@ -59,6 +77,44 @@ $card-bg: #FFFFFF;
   font-size: 28px;
   color: $primary;
   font-weight: 500;
+}
+
+.group-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.group-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  border: 2px solid #E6EAF2;
+  color: $text-secondary;
+  background: #FAFBFE;
+}
+
+.group-chip-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.group-chip-text {
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.group-chip.active {
+  border-width: 2px;
+}
+
+.group-empty {
+  font-size: 26px;
+  color: $text-hint;
 }
 
 .color-picker {

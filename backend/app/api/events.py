@@ -25,7 +25,10 @@ async def create_event(
     result = await db.execute(
         select(event.__class__)
         .where(event.__class__.id == event.id)
-        .options(selectinload(event.__class__.creator))
+        .options(
+            selectinload(event.__class__.creator),
+            selectinload(event.__class__.visible_groups),
+        )
     )
     event = result.scalar_one()
     nickname = event.creator.nickname if event.creator else ""

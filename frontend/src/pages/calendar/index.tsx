@@ -27,6 +27,13 @@ function formatTime(isoString: string): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
+function getVisibleGroupIds(event: { group_id: string | null; visible_group_ids: string[] }): string[] {
+  if (event.visible_group_ids && event.visible_group_ids.length > 0) {
+    return event.visible_group_ids;
+  }
+  return event.group_id ? [event.group_id] : [];
+}
+
 export default function CalendarPage() {
   const { currentMonth, selectedDate, setMonth, goToToday } = useCalendarStore();
   const { events, loading, fetchEvents, filterGroupId, setFilterGroupId } = useEventStore();
@@ -122,7 +129,7 @@ export default function CalendarPage() {
 
   // Filter events for display
   const displayEvents = filterGroupId === "personal"
-    ? events.filter((e) => !e.group_id)
+    ? events.filter((e) => e.creator_id === user?.id)
     : events;
 
   // Filter events for selected date
@@ -151,6 +158,21 @@ export default function CalendarPage() {
     if (!groupId) return null;
     const group = groups.find((g) => g.id === groupId);
     return group?.name || null;
+  };
+
+  const getEventGroupSummary = (event: { group_id: string | null; visible_group_ids: string[] }): {
+    label: string;
+    color: string;
+  } | null => {
+    const groupIds = getVisibleGroupIds(event);
+    if (groupIds.length === 0) return null;
+
+    const primaryGroupId = groupIds[0];
+    const primaryName = getGroupName(primaryGroupId) || "日历组";
+    return {
+      label: groupIds.length > 1 ? `${primaryName} +${groupIds.length - 1}` : primaryName,
+      color: getGroupColor(primaryGroupId),
+    };
   };
 
   const handleEventClick = (eventId: string) => {
@@ -228,8 +250,8 @@ export default function CalendarPage() {
 
         {dayEvents.map((event, idx) => {
           const isBusy = event.title === "有安排";
-          const groupName = getGroupName(event.group_id);
-          const color = getGroupColor(event.group_id);
+          const groupSummary = getEventGroupSummary(event);
+          const color = groupSummary?.color || getGroupColor(null);
 
           return (
             <View
@@ -251,9 +273,9 @@ export default function CalendarPage() {
                   ) : null}
                 </View>
               </View>
-              {groupName && (
+              {groupSummary && (
                 <View className="group-tag" style={{ color, backgroundColor: color + "20" }}>
-                  <Text>{groupName}</Text>
+                  <Text>{groupSummary.label}</Text>
                 </View>
               )}
             </View>

@@ -57,10 +57,17 @@ function getEventDotsForDate(
   const seen = new Set<string>();
   const colors: string[] = [];
   for (const e of dayEvents) {
-    const key = e.group_id || "__personal__";
-    if (!seen.has(key) && colors.length < 3) {
-      seen.add(key);
-      colors.push(getGroupColor(e.group_id));
+    const groupIds = e.visible_group_ids && e.visible_group_ids.length > 0
+      ? e.visible_group_ids
+      : e.group_id
+        ? [e.group_id]
+        : ["__personal__"];
+    for (const groupId of groupIds) {
+      const key = groupId || "__personal__";
+      if (!seen.has(key) && colors.length < 3) {
+        seen.add(key);
+        colors.push(getGroupColor(groupId === "__personal__" ? null : groupId));
+      }
     }
   }
   return colors;

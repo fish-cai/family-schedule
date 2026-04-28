@@ -89,6 +89,12 @@ $danger: #F25C54;
   font-weight: 500;
 }
 
+.group-badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .delete-section {
   padding: 64px 32px;
   text-align: center;

@@ -33,6 +33,42 @@ function toTimeStr(d: Date): string {
   return `${padZero(d.getHours())}:${padZero(d.getMinutes())}`;
 }
 
+function parseDateTime(dateStr: string, timeStr: string): Date {
+  return new Date(`${dateStr}T${timeStr}:00`);
+}
+
+function getNextHourDate(base = new Date()): Date {
+  const next = new Date(base);
+  next.setMinutes(0, 0, 0);
+  next.setHours(next.getHours() + 1);
+  return next;
+}
+
+function addDays(dateStr: string, days: number): string {
+  const date = new Date(`${dateStr}T00:00:00`);
+  date.setDate(date.getDate() + days);
+  return toDateStr(date);
+}
+
+function getAutoEnd(dateStr: string, timeStr: string, allDay: boolean): {
+  endDate: string;
+  endTime: string;
+} {
+  if (allDay) {
+    return {
+      endDate: addDays(dateStr, 1),
+      endTime: "00:00",
+    };
+  }
+
+  const end = parseDateTime(dateStr, timeStr);
+  end.setHours(end.getHours() + 1);
+  return {
+    endDate: toDateStr(end),
+    endTime: toTimeStr(end),
+  };
+}
+
 function toISOWithTZ(dateStr: string, timeStr: string): string {
   return `${dateStr}T${timeStr}:00+08:00`;
 }
@@ -54,7 +90,8 @@ function formatRepeatRule(rule: Record<string, any>): string {
 export default function EventCreatePage() {
   const router = useRouter();
   const eventId = router.params.id || null;
-  const initialDate = router.params.date || toDateStr(new Date());
+  const nextHour = getNextHourDate();
+  const initialDate = router.params.date || toDateStr(nextHour);
   const isEdit = !!eventId;
   const aiResultParam = router.params.ai_result || null;
 
@@ -64,16 +101,13 @@ export default function EventCreatePage() {
   const [title, setTitle] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
   const [startDate, setStartDate] = useState(initialDate);
-  const [startTime, setStartTime] = useState(toTimeStr(new Date()));
-  const [endDate, setEndDate] = useState(initialDate);
-  const [endTime, setEndTime] = useState(() => {
-    const d = new Date();
-    d.setHours(d.getHours() + 1);
-    return toTimeStr(d);
-  });
+  const [startTime, setStartTime] = useState(toTimeStr(nextHour));
+  const initialEnd = getAutoEnd(initialDate, toTimeStr(nextHour), false);
+  const [endDate, setEndDate] = useState(initialEnd.endDate);
+  const [endTime, setEndTime] = useState(initialEnd.endTime);
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
-  const [groupId, setGroupId] = useState<string | null>(null);
+  const [visibleGroupIds, setVisibleGroupIds] = useState<string[]>([]);
   const [visibility, setVisibility] = useState("public");
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [reminderMinutes, setReminderMinutes] = useState(0);
@@ -100,7 +134,9 @@ export default function EventCreatePage() {
         }
         setLocation(e.location);
         setDescription(e.description || "");
-        setGroupId(e.group_id);
+        setVisibleGroupIds(
+          e.visible_group_ids?.length ? e.visible_group_ids : e.group_id ? [e.group_id] : []
+        );
         setVisibility(e.visibility);
         if (e.color) setColor(e.color);
         if (e.remind_minutes && e.remind_minutes.length > 0) {
@@ -135,14 +171,35 @@ export default function EventCreatePage() {
     }
   }, [aiResultParam, isEdit]);
 
-  const groupPickerRange = ["个人", ...groups.map((g) => g.name)];
-  const groupPickerValue = groupId
-    ? groups.findIndex((g) => g.id === groupId) + 1
-    : 0;
+  useEffect(() => {
+    if (isEdit) return;
+
+    if (isAllDay) {
+      setEndDate(addDays(startDate, 1));
+      setEndTime("00:00");
+      return;
+    }
+
+    const start = parseDateTime(startDate, startTime);
+    const end = parseDateTime(endDate, endTime);
+    if (start >= end) {
+      const autoEnd = getAutoEnd(startDate, startTime, false);
+      setEndDate(autoEnd.endDate);
+      setEndTime(autoEnd.endTime);
+    }
+  }, [isAllDay, startDate, startTime, endDate, endTime, isEdit]);
 
   const visibilityIndex = VISIBILITY_OPTIONS.findIndex(
     (v) => v.value === visibility
   );
+
+  const toggleVisibleGroup = (groupId: string) => {
+    setVisibleGroupIds((current) => (
+      current.includes(groupId)
+        ? current.filter((id) => id !== groupId)
+        : [...current, groupId]
+    ));
+  };
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -154,7 +211,7 @@ export default function EventCreatePage() {
       ? `${startDate}T00:00:00+08:00`
       : toISOWithTZ(startDate, startTime);
     const endISO = isAllDay
-      ? `${endDate}T23:59:59+08:00`
+      ? `${endDate}T00:00:00+08:00`
       : toISOWithTZ(endDate, endTime);
 
     if (new Date(endISO) < new Date(startISO)) {
@@ -173,7 +230,8 @@ export default function EventCreatePage() {
           end_time: endISO,
           location,
           color,
-          visibility: groupId ? (visibility as "public" | "busy" | "private") : undefined,
+          visibility: visibleGroupIds.length > 0 ? (visibility as "public" | "busy" | "private") : undefined,
+          visible_group_ids: visibleGroupIds,
           remind_minutes: reminderMinutes > 0 ? [reminderMinutes] : undefined,
         };
         await updateEvent(eventId, data);
@@ -187,8 +245,8 @@ export default function EventCreatePage() {
           end_time: endISO,
           location,
           color,
-          group_id: groupId,
-          visibility: groupId ? (visibility as "public" | "busy" | "private") : "public",
+          visible_group_ids: visibleGroupIds,
+          visibility: visibleGroupIds.length > 0 ? (visibility as "public" | "busy" | "private") : "public",
           remind_minutes: reminderMinutes > 0 ? [reminderMinutes] : undefined,
           repeat_rule: repeatRule || undefined,
         };
@@ -219,7 +277,13 @@ export default function EventCreatePage() {
       {/* All day toggle */}
       <View className="form-row">
         <Text className="form-label">全天</Text>
-        <Switch checked={isAllDay} onChange={(e) => setIsAllDay(e.detail.value)} color="#4A90D9" />
+        <Switch checked={isAllDay} onChange={(e) => {
+          const nextAllDay = e.detail.value;
+          setIsAllDay(nextAllDay);
+          const autoEnd = getAutoEnd(startDate, startTime, nextAllDay);
+          setEndDate(autoEnd.endDate);
+          setEndTime(autoEnd.endTime);
+        }} color="#4A90D9" />
       </View>
 
       {/* Start */}
@@ -276,26 +340,35 @@ export default function EventCreatePage() {
         />
       </View>
 
-      {/* Group */}
-      <View className="form-row">
-        <Text className="form-label">日历组</Text>
-        <Picker
-          mode="selector"
-          range={groupPickerRange}
-          value={groupPickerValue}
-          onChange={(e) => {
-            const idx = Number(e.detail.value);
-            setGroupId(idx === 0 ? null : groups[idx - 1].id);
-          }}
-        >
-          <Text className="picker-value">
-            {groupPickerValue === 0 ? "个人" : groups[groupPickerValue - 1]?.name}
-          </Text>
-        </Picker>
+      {/* Visible groups */}
+      <View className="form-section group-section">
+        <View className="group-section-head">
+          <Text className="form-label">可见日历组</Text>
+          <Text className="group-hint">不勾选则仅自己可见，仍显示在全部和个人</Text>
+        </View>
+        <View className="group-chip-list">
+          {groups.map((group) => {
+            const active = visibleGroupIds.includes(group.id);
+            return (
+              <View
+                key={group.id}
+                className={`group-chip ${active ? "active" : ""}`}
+                style={active ? { borderColor: group.color, color: group.color, backgroundColor: `${group.color}14` } : {}}
+                onClick={() => toggleVisibleGroup(group.id)}
+              >
+                <View className="group-chip-dot" style={{ backgroundColor: group.color }} />
+                <Text className="group-chip-text">{group.name}</Text>
+              </View>
+            );
+          })}
+          {groups.length === 0 && (
+            <Text className="group-empty">暂无可选日历组</Text>
+          )}
+        </View>
       </View>
 
-      {/* Visibility - only show when group selected */}
-      {groupId && (
+      {/* Visibility - only show when any group selected */}
+      {visibleGroupIds.length > 0 && (
         <View className="form-row">
           <Text className="form-label">可见性</Text>
           <Picker

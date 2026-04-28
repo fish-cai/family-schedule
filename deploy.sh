@@ -5,6 +5,8 @@ set -e
 SERVER="ubuntu@124.223.81.74"
 REMOTE_DIR="/home/ubuntu/family-schedule"
 COMPOSE_FILE="docker-compose.prod.yml"
+HEALTHCHECK_URL="https://fishschedule.cloud/health"
+FALLBACK_HEALTHCHECK_URL="http://124.223.81.74/health"
 
 echo "📦 同步代码到服务器..."
 rsync -avz --delete \
@@ -30,4 +32,9 @@ ssh "${SERVER}" "cd ${REMOTE_DIR} && sudo docker compose --env-file .env.product
 
 echo ""
 echo "✅ 部署完成！"
-curl -s http://124.223.81.74/health | python3 -m json.tool
+if curl -fsS "${HEALTHCHECK_URL}" | python3 -m json.tool; then
+  exit 0
+fi
+
+echo "⚠️ HTTPS 健康检查失败，尝试 HTTP 回退检查..."
+curl -fsS "${FALLBACK_HEALTHCHECK_URL}" | python3 -m json.tool
