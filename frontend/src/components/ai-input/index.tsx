@@ -43,7 +43,7 @@ export default function AiInput({ visible, selectedDate, onClose }: AiInputProps
     <View className="ai-overlay" onClick={onClose}>
       <View className="ai-panel" onClick={(e) => e.stopPropagation()}>
         <View className="ai-header">
-          <Text className="ai-title">AI 智能创建</Text>
+          <Text className="ai-title">快速创建</Text>
           <Text className="ai-close" onClick={onClose}>×</Text>
         </View>
         {loading ? (
@@ -53,7 +53,7 @@ export default function AiInput({ visible, selectedDate, onClose }: AiInputProps
               <View className="ai-loading-dot" />
               <View className="ai-loading-dot" />
             </View>
-            <Text className="ai-loading-text">AI 正在理解你的日程...</Text>
+            <Text className="ai-loading-text">正在解析日程...</Text>
           </View>
         ) : (
           <>
