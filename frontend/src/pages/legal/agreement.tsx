@@ -13,7 +13,7 @@ export default function AgreementPage() {
 
       <Text className="legal-h">一、服务说明</Text>
       <Text className="legal-p">
-        本服务是一款基于微信小程序的日程管理工具，提供个人日程记录、家庭/团队共享日历、AI 智能创建日程等功能。
+        本服务是一款基于微信小程序的日程管理工具，提供个人日程记录、家庭/团队共享日历、快速创建日程等功能。
       </Text>
 
       <Text className="legal-h">二、账号</Text>
@@ -47,9 +47,9 @@ export default function AgreementPage() {
         2. 本服务的程序代码、界面设计、商标标识等知识产权归本服务方所有。未经授权，您不得复制、修改、传播。
       </Text>
 
-      <Text className="legal-h">五、AI 功能说明</Text>
+      <Text className="legal-h">五、快速创建功能说明</Text>
       <Text className="legal-p">
-        AI 智能创建日程功能依托第三方大语言模型，解析结果可能存在误差，请您在保存前自行核对。我们不对 AI 解析结果的准确性作任何明示或默示的担保。
+        快速创建日程功能使用自然语言解析技术，解析结果可能存在误差，请您在保存前自行核对。我们不对解析结果的准确性作任何明示或默示的担保。
       </Text>
 
       <Text className="legal-h">六、服务变更与中止</Text>
@@ -62,7 +62,7 @@ export default function AgreementPage() {
         1. 在法律允许的最大范围内，本服务以"现状"提供，不对服务的及时性、准确性、不间断性作任何保证。
       </Text>
       <Text className="legal-p">
-        2. 因不可抗力、网络中断、第三方原因（含微信平台、AI 服务等）造成的服务异常，我们不承担责任。
+        2. 因不可抗力、网络中断、第三方原因（含微信平台、第三方服务等）造成的服务异常，我们不承担责任。
       </Text>
 
       <Text className="legal-h">八、协议变更</Text>

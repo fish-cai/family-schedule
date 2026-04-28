@@ -270,8 +270,8 @@ export default function CalendarPage() {
               <Text className="fab-menu-label">手动创建</Text>
             </View>
             <View className="fab-menu-item" onClick={(e) => { e.stopPropagation(); setShowFabMenu(false); setShowAiInput(true); }}>
-              <Text className="fab-menu-icon">🤖</Text>
-              <Text className="fab-menu-label">AI 创建</Text>
+              <Text className="fab-menu-icon">✨</Text>
+              <Text className="fab-menu-label">快速创建</Text>
             </View>
           </View>
         </View>
