@@ -93,7 +93,7 @@ export default function ProfilePage() {
         <View className="menu-item" onClick={() => {
           Taro.showModal({
             title: "共享日程",
-            content: "版本 1.0.0\n\n为共享而生的智能日程管理工具。\n支持家庭、朋友、团队共享日历，AI 智能创建日程。",
+            content: "版本 1.0.0\n\n为共享而生的日程管理工具。\n支持家庭、朋友、团队共享日历和快速创建日程。",
             showCancel: false,
             confirmText: "知道了",
           });

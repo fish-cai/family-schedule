@@ -19,7 +19,7 @@ export default function PrivacyPage() {
         2. 您主动提供的内容：包括您创建的日程标题、描述、时间、地点、提醒设置、日历组名称、邀请码等。这些内容由您主动输入并保存。
       </Text>
       <Text className="legal-p">
-        3. 自然语言输入：当您使用 AI 智能创建日程功能时，您输入的文字会被发送至 AI 服务以解析为结构化日程信息。
+        3. 自然语言输入：当您使用快速创建日程功能时，您输入的文字会被发送至第三方解析服务以解析为结构化日程信息。
       </Text>
 
       <Text className="legal-h">二、我们如何使用信息</Text>
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
 
       <Text className="legal-h">三、第三方服务</Text>
       <Text className="legal-p">
-        AI 智能创建日程功能依托深度求索（DeepSeek）大语言模型 API。当您使用该功能时，您输入的文本会被发送至该服务进行处理。该服务遵循其自身的隐私政策，请您在使用前知悉。
+        快速创建日程功能依托第三方文本解析服务。当您使用该功能时，您输入的文本会被发送至该服务进行处理。该服务遵循其自身的隐私政策，请您在使用前知悉。
       </Text>
 
       <Text className="legal-h">四、信息存储与安全</Text>
