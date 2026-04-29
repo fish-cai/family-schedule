@@ -70,7 +70,7 @@ export default function PrivacyPage() {
       <Text className="legal-p">
         如您对本政策有任何疑问、建议或投诉，可通过以下方式与我们联系：
       </Text>
-      <Text className="legal-p">邮箱：evan.yu@wisetechglobal.com</Text>
+      <Text className="legal-p">邮箱：fihserj@gmail.com</Text>
     </View>
   );
 }

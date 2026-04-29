@@ -4,6 +4,7 @@ import Taro, { useRouter } from "@tarojs/taro";
 import { getEventDetail } from "../../services/api";
 import { useEventStore } from "../../stores/event";
 import { useGroupStore } from "../../stores/group";
+import { useAuthStore } from "../../stores/auth";
 import type { EventResponse } from "../../types";
 import "./detail.scss";
 
@@ -50,6 +51,7 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true);
   const { deleteEvent } = useEventStore();
   const { groups } = useGroupStore();
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     if (!eventId) return;
@@ -108,7 +110,9 @@ export default function EventDetailPage() {
       {/* Header with edit button */}
       <View className="detail-header">
         <Text className="detail-title">{event.title}</Text>
-        <Text className="edit-btn" onClick={handleEdit}>编辑</Text>
+        {user && event.creator_id === user.id && (
+          <Text className="edit-btn" onClick={handleEdit}>编辑</Text>
+        )}
       </View>
 
       <View className="detail-divider" />
@@ -200,11 +204,13 @@ export default function EventDetailPage() {
       </View>
 
       {/* Delete button */}
-      <View className="delete-section">
-        <Text className="delete-btn" onClick={handleDelete}>
-          删除日程
-        </Text>
-      </View>
+      {user && event.creator_id === user.id && (
+        <View className="delete-section">
+          <Text className="delete-btn" onClick={handleDelete}>
+            删除日程
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

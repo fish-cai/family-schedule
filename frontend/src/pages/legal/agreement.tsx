@@ -77,7 +77,7 @@ export default function AgreementPage() {
 
       <Text className="legal-h">十、联系方式</Text>
       <Text className="legal-p">如您有任何疑问，可通过以下方式联系：</Text>
-      <Text className="legal-p">邮箱：evan.yu@wisetechglobal.com</Text>
+      <Text className="legal-p">邮箱：fihserj@gmail.com</Text>
     </View>
   );
 }

@@ -107,8 +107,15 @@ export default function CalendarPage() {
     if (!token) return;
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
-    const start = new Date(year, month, 1).toISOString();
-    const end = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+    // Load all dates visible on the calendar grid (including prev/next month fill)
+    const firstDay = new Date(year, month, 1);
+    const startOffset = firstDay.getDay(); // 0=Sun
+    const gridStart = new Date(year, month, 1 - startOffset);
+    const gridEnd = new Date(gridStart);
+    gridEnd.setDate(gridEnd.getDate() + 42); // 6 rows * 7 days
+    gridEnd.setSeconds(gridEnd.getSeconds() - 1);
+    const start = gridStart.toISOString();
+    const end = gridEnd.toISOString();
     // "personal" filter is handled client-side; pass group_id for specific group
     const apiGroupId = filterGroupId && filterGroupId !== "personal" ? filterGroupId : undefined;
     fetchEvents(start, end, apiGroupId);
