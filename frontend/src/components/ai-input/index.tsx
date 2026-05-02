@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, Input } from "@tarojs/components";
 import Taro from "@tarojs/taro";
 import { parseEvent } from "../../services/api";
+import { track, TRACK } from "../../services/analytics";
 import "./index.scss";
 
 interface AiInputProps {
@@ -26,6 +27,7 @@ export default function AiInput({ visible, selectedDate, onClose }: AiInputProps
     setLoading(true);
     try {
       const result = await parseEvent(trimmed);
+      track(TRACK.QUICK_CREATE_USED, { success: true, length: trimmed.length });
       const encoded = encodeURIComponent(JSON.stringify(result));
       onClose();
       setText("");
@@ -33,6 +35,7 @@ export default function AiInput({ visible, selectedDate, onClose }: AiInputProps
         url: `/pages/event/create?date=${selectedDate}&ai_result=${encoded}`,
       });
     } catch (e: any) {
+      track(TRACK.QUICK_CREATE_USED, { success: false });
       Taro.showToast({ title: e.message || "解析失败，请重试", icon: "none" });
     } finally {
       setLoading(false);

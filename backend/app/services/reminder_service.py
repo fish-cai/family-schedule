@@ -89,7 +89,10 @@ async def scan_and_send(db: AsyncSession) -> int:
             Reminder.status == ReminderStatus.PENDING,
             Reminder.remind_at <= now,
         )
-        .options(selectinload(Reminder.event), selectinload(Reminder.user))
+        .options(
+            selectinload(Reminder.event).selectinload(Event.group),
+            selectinload(Reminder.user),
+        )
     )
     reminders = result.scalars().all()
     sent_count = 0
@@ -106,6 +109,7 @@ async def scan_and_send(db: AsyncSession) -> int:
                     "event_title": event.title,
                     "event_time": event.start_time.isoformat(),
                     "location": event.location or "",
+                    "group_name": event.group.name if event.group else "个人",
                 },
             )
             reminder.status = ReminderStatus.SENT if success else ReminderStatus.FAILED

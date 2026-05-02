@@ -35,17 +35,35 @@ export async function request<T>(options: RequestOptions): Promise<T> {
     }
   }
 
-  const response = await Taro.request({
-    url: `${BASE_URL}${url}`,
-    method,
-    data,
-    header,
-  });
+  let response: any;
+  try {
+    response = await Taro.request({
+      url: `${BASE_URL}${url}`,
+      method,
+      data,
+      header,
+      timeout: 15000,
+    });
+  } catch (e: any) {
+    const raw = (e?.errMsg || e?.message || "").toLowerCase();
+    if (raw.includes("timeout")) {
+      throw new Error("请求超时，请稍后重试");
+    }
+    if (raw.includes("abort")) {
+      throw new Error("请求已取消");
+    }
+    throw new Error("网络连接失败，请检查网络后重试");
+  }
 
   if (response.statusCode === 401) {
     Taro.removeStorageSync("access_token");
-    Taro.redirectTo({ url: "/pages/index/index" });
+    Taro.showToast({ title: "登录已过期，请重新登录", icon: "none", duration: 1500 });
+    setTimeout(() => Taro.redirectTo({ url: "/pages/index/index" }), 800);
     throw new Error("登录已过期");
+  }
+
+  if (response.statusCode >= 500) {
+    throw new Error("服务器繁忙，请稍后重试");
   }
 
   if (response.statusCode >= 400) {

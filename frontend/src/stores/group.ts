@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { GroupResponse, GroupCreate, GroupUpdate } from "../types";
 import * as api from "../services/api";
+import { track, TRACK } from "../services/analytics";
 
 interface GroupState {
   groups: GroupResponse[];
@@ -38,6 +39,7 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   createGroup: async (data) => {
     const group = await api.createGroup(data);
     set((s) => ({ groups: [...s.groups, group] }));
+    track(TRACK.GROUP_CREATE);
     return group;
   },
 
@@ -57,6 +59,7 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   joinGroupByCode: async (inviteCode) => {
     const result = await api.joinGroupByCode(inviteCode);
     await get().fetchGroups();
+    track(TRACK.GROUP_JOIN);
     return result.group_id;
   },
 

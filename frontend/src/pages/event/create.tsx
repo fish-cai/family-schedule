@@ -4,8 +4,21 @@ import Taro, { useRouter } from "@tarojs/taro";
 import { useEventStore } from "../../stores/event";
 import { useGroupStore } from "../../stores/group";
 import { getEventDetail } from "../../services/api";
+import { REMIND_TEMPLATE_ID } from "../../config/wechat";
+import { track, TRACK } from "../../services/analytics";
 import type { EventCreate, EventUpdate } from "../../types";
 import "./create.scss";
+
+async function requestReminderSubscription(): Promise<void> {
+  if (!REMIND_TEMPLATE_ID || process.env.TARO_ENV !== "weapp") return;
+  try {
+    const res: any = await Taro.requestSubscribeMessage({ tmplIds: [REMIND_TEMPLATE_ID] });
+    const status = res?.[REMIND_TEMPLATE_ID];
+    track(TRACK.REMINDER_SUBSCRIBE, { status });
+  } catch {
+    track(TRACK.REMINDER_SUBSCRIBE, { status: "rejected" });
+  }
+}
 
 const PRESET_COLORS = ["#4A90D9", "#FF6B6B", "#52C41A", "#FAAD14", "#722ED1", "#EB2F96"];
 const REMINDER_OPTIONS = [
@@ -217,6 +230,10 @@ export default function EventCreatePage() {
     if (new Date(endISO) < new Date(startISO)) {
       Taro.showToast({ title: "结束时间不能早于开始时间", icon: "none" });
       return;
+    }
+
+    if (reminderMinutes > 0) {
+      await requestReminderSubscription();
     }
 
     setSaving(true);

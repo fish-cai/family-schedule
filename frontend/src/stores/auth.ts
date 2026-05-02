@@ -2,6 +2,7 @@ import { create } from "zustand";
 import Taro from "@tarojs/taro";
 import type { User } from "../types";
 import { login as apiLogin, getMe } from "../services/api";
+import { track, TRACK } from "../services/analytics";
 
 interface AuthState {
   token: string | null;
@@ -34,6 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const user = await getMe();
       set({ token: tokenRes.access_token, user, loading: false });
+      track(TRACK.LOGIN_SUCCESS);
     } catch (e) {
       console.error("Login failed:", e);
       set({ loading: false });

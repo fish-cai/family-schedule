@@ -6,6 +6,7 @@ from app.models.event import Event, EventVisibility
 from app.models.event_visible_group import EventVisibleGroup
 from app.models.reminder import Reminder, ReminderStatus
 from app.models.template import Template
+from app.models.analytics_event import AnalyticsEvent
 
 __all__ = [
     "Base",
@@ -19,4 +20,5 @@ __all__ = [
     "Reminder",
     "ReminderStatus",
     "Template",
+    "AnalyticsEvent",
 ]

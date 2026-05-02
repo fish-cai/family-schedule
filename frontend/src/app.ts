@@ -1,6 +1,7 @@
 import { PropsWithChildren } from "react";
 import { useLaunch } from "@tarojs/taro";
 import { useAuthStore } from "./stores/auth";
+import { track, TRACK } from "./services/analytics";
 
 import "./app.scss";
 
@@ -11,6 +12,8 @@ function App({ children }: PropsWithChildren) {
       const { token } = useAuthStore.getState();
       if (!token) {
         login();
+      } else {
+        track(TRACK.APP_OPEN);
       }
     });
   });

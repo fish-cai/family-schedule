@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # WeChat
     WECHAT_APP_ID: str = ""
     WECHAT_APP_SECRET: str = ""
+    WECHAT_REMIND_TEMPLATE_ID: str = ""
 
     # LLM
     LLM_PROVIDER: str = "deepseek"

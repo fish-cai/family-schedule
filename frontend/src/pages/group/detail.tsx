@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { View, Text, Button } from "@tarojs/components";
-import Taro, { useRouter, useShareAppMessage, useDidShow } from "@tarojs/taro";
+import Taro, { useRouter, useShareAppMessage, useShareTimeline, useDidShow } from "@tarojs/taro";
 import { getGroupDetail, getEvents } from "../../services/api";
 import { useGroupStore } from "../../stores/group";
 import { useAuthStore } from "../../stores/auth";
 import type { GroupDetailResponse, EventResponse } from "../../types";
+import shareCover from "../../assets/share-cover.png";
 import "./detail.scss";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -67,10 +68,19 @@ export default function GroupDetailPage() {
   useDidShow(() => { loadGroupEvents(); });
 
   useShareAppMessage(() => {
-    if (!group) return { title: "共享日程", path: "/pages/index/index" };
+    if (!group) return { title: "共享日程 · 全家共用一本日历", path: "/pages/index/index", imageUrl: shareCover };
     return {
-      title: `邀请你加入「${group.name}」`,
+      title: `邀请你加入「${group.name}」共享日历`,
       path: `/pages/index/index?join_group_id=${group.id}&invite_code=${group.invite_code}`,
+      imageUrl: shareCover,
+    };
+  });
+
+  useShareTimeline(() => {
+    if (!group) return { title: "共享日程 · 全家共用一本日历" };
+    return {
+      title: `「${group.name}」共享日历，点开加入`,
+      query: `join_group_id=${group.id}&invite_code=${group.invite_code}`,
     };
   });
 

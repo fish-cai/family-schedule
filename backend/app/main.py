@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api.ai import router as ai_router
+from app.api.analytics import router as analytics_router
 from app.api.events import router as events_router
 from app.api.groups import router as groups_router
 from app.api.users import router as users_router
@@ -38,6 +39,7 @@ app.include_router(users_router)
 app.include_router(groups_router)
 app.include_router(events_router)
 app.include_router(ai_router)
+app.include_router(analytics_router)
 
 
 @app.on_event("startup")
